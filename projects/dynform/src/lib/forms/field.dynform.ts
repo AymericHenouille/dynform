@@ -120,8 +120,8 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
     return merge(
       this._value$$,
       this.context$.pipe(
-        switchMap((context) => this.dynformOptions.value(context))
-      )
+        switchMap((context) => this.dynformOptions.value(context)),
+      ),
     );
   }
 
