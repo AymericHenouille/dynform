@@ -3,5 +3,41 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
+    "dynform": {
+      "projectType": "library",
+      "root": "projects/dynform",
+      "sourceRoot": "projects/dynform/src",
+      "prefix": "dyn",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/dynform/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/dynform/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/dynform/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/dynform/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "e6800c4f-b321-4f4c-8b60-72e95335534c"
   }
 }
