@@ -1,7 +1,7 @@
-import { BehaviorSubject, Observable, combineLatest, filter, firstValueFrom, map, merge, switchMap } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, filter, firstValueFrom, iif, map, merge, mergeAll, of, scan, switchMap } from 'rxjs';
 import { DynOperable, DynOperation } from '../models/dyn-operation.model';
 import { DynValidator, DynValidatorError } from '../models/dyn-validator.model';
-import { UpdateValueFn } from '../models/update-value.model';
+import { UpdateValueFn, syncronizeValue } from '../models/update-value.model';
 import { DynFormValue } from '../models/value.model';
 import { DynFormOptions } from './creator/dynform.creator';
 import { DynFormContext } from './dynform-context.model';
@@ -29,21 +29,13 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    */
   private readonly _value$$: BehaviorSubject<DynFormValue<TValue> | undefined> = new BehaviorSubject<DynFormValue<TValue> | undefined>(undefined);
   /**
-   * The data of the controller.
-   *
-   * @private
-   * @type {(BehaviorSubject<TData | undefined>)}
-   * @memberof FieldDynForm
-   */
-  private readonly _data$$: BehaviorSubject<TData | undefined> = new BehaviorSubject<TData | undefined>(undefined);
-  /**
    * The disabled state of the controller.
    *
    * @private
    * @type {BehaviorSubject<boolean>}
    * @memberof FieldDynForm
    */
-  private readonly _disable$$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private readonly _disable$$: BehaviorSubject<boolean | undefined> = new BehaviorSubject<boolean | undefined>(undefined);
   /**
    * The touched state of the controller.
    *
@@ -75,7 +67,7 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {BehaviorSubject<boolean>}
    * @memberof FieldDynForm
    */
-  private readonly _hidden$$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private readonly _hidden$$: BehaviorSubject<boolean| undefined> = new BehaviorSubject<boolean | undefined>(undefined);
   /**
    * The placeholder of the controller.
    *
@@ -83,7 +75,15 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {BehaviorSubject<string>}
    * @memberof FieldDynForm
    */
-  private readonly _placeholder$$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  private readonly _placeholder$$: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
+  /**
+   * Store the datas
+   *
+   * @private
+   * @type {Map<keyof TData, BehaviorSubject<TData[keyof TData]>>}
+   * @memberof FieldDynForm
+   */
+  private readonly _dataMap: Map<keyof TData, BehaviorSubject<TData[keyof TData] | undefined>> = new Map<keyof TData, BehaviorSubject<TData[keyof TData] | undefined>>();
 
   /**
    * Creates an instance of FieldDynForm.
@@ -94,22 +94,6 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
   ) { }
 
   /**
-   * The placeholder of the controller.
-   * @param placeholder The new placeholder for the controller.
-   */
-  public setPlaceholder(placeholder: string): void {
-    this._placeholder$$.next(placeholder);
-  }
-
-  /**
-   * Update the placeholder of the controller.
-   * @param updateFn The function that will update the placeholder for the controller.
-   */
-  public updatePlaceholder(updateFn: UpdateValueFn<string>): void {
-    firstValueFrom(this.placeholder$).then((placeholder) => this.setPlaceholder(updateFn(placeholder)));
-  }
-
-  /**
    * The value of the controller.
    *
    * @readonly
@@ -117,12 +101,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @memberof FieldDynForm
    */
   public get value$(): Observable<DynFormValue<TValue> | undefined> {
-    return merge(
-      this._value$$,
-      this.context$.pipe(
-        switchMap((context) => this.dynformOptions.value(context)),
-      ),
-    );
+    return merge([
+      this._value$$.asObservable(),
+      this.context$.pipe(switchMap((context) => this.dynformOptions.value(context))),
+    ]).pipe(mergeAll());
   }
 
   /**
@@ -132,22 +114,26 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {(Observable<TData | undefined>)}
    * @memberof FieldDynForm
    */
-  public get data$(): Observable<TData | undefined> {
-    return merge(
-      this._data$$,
-      this.context$.pipe(
-        switchMap((context: DynFormContext<TValue, TData>) => this.dynformOptions.data(context).pipe(
-          switchMap((operableData: DynOperable<TValue, TData, TData>): Observable<TData> => {
-            const entries$: Observable<{ key: string, value: TData[keyof TData] }>[] = Object.entries(operableData)
-              .map(([key, operation]) => (operation as any as DynOperation<TValue, TData, any>)(context).pipe(
-                map((value) => ({ key, value }))
-              ));
-            return combineLatest(entries$).pipe(
-              map((entries) => entries.reduce((acc, entry) => ({ ...acc, [entry.key]: entry.value }), {} as TData))
-            );
-          })
-        ))
-      )
+  public get data$(): Observable<Partial<TData>> {
+    return this.context$.pipe(
+      switchMap((context) => this.dynformOptions.data(context).pipe(
+        switchMap((data) => iif(
+          () => data !== undefined,
+          of(data).pipe(
+            map((operableData) => Object.entries(operableData as DynOperable<TValue, TData, TData>) as [keyof TData, DynOperation<TValue, TData, TData[keyof TData]>][]),
+            map((operableEntries) => operableEntries.concat([...this._dataMap.keys()].map((key) => [key, () => EMPTY]))),
+            map((operableEntries) => operableEntries.filter(([key], index, array) => array.findIndex(([searchKey]) => searchKey === key) === index)),
+            map((operableEntries) => operableEntries.map(([key, operation]) => merge(
+              this.getDataByKey(key).asObservable(),
+              operation(context)
+            ).pipe(map((result) => ({ [key]: result }) as Partial<TData>)))),
+            switchMap((entries) => merge(entries)),
+            mergeAll(),
+          ),
+          of({})
+        )),
+      )),
+      scan((acc, value) => Object.assign({}, acc, value), {} as Partial<TData>)
     );
   }
 
@@ -159,12 +145,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @memberof FieldDynForm
    */
   public get disable$(): Observable<boolean> {
-    return merge(
-      this._disable$$,
-      this.context$.pipe(
-        switchMap((context) => this.dynformOptions.disabled(context))
-      )
-    );
+    return merge([
+      this._disable$$.pipe(filter((disable): disable is boolean => disable !== undefined)),
+      this.context$.pipe(switchMap((context) => this.dynformOptions.disabled(context))),
+    ]).pipe(mergeAll());
   }
 
   /**
@@ -236,7 +220,16 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @memberof FieldDynForm
    */
   public get invalid$(): Observable<boolean> {
-    return this._invalid$$.asObservable();
+    return merge(
+      this._invalid$$,
+      this.context$.pipe(
+        switchMap((context) => this.dynformOptions.validators(context).pipe(
+          map((validators) => validators.map((validator) => validator(context))),
+          switchMap((validators) => combineLatest(validators)),
+          map((errors) => errors.some((error): error is DynValidatorError => error !== undefined))
+        ))
+      )
+    );
   }
 
   /**
@@ -286,9 +279,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @memberof FieldDynForm
    */
   public get hidden$(): Observable<boolean> {
-    return this.context$.pipe(
-      switchMap((context) => this.dynformOptions.hide(context))
-    );
+    return merge([
+      this._hidden$$.pipe(filter((hidden): hidden is boolean => hidden !== undefined)),
+      this.context$.pipe(switchMap((context) => this.dynformOptions.hide(context))),
+    ]).pipe(mergeAll());
   }
 
   /**
@@ -303,6 +297,7 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
       map((hidden) => !hidden)
     );
   }
+
   /**
    * The placeholder of the controller.
    *
@@ -311,13 +306,12 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @memberof FieldDynForm
    */
   public get placeholder$(): Observable<string> {
-    return merge(
-      this._placeholder$$,
-      this.context$.pipe(
-        switchMap((context) => this.dynformOptions.placeholder(context))
-      )
-    );
+    return merge([
+      this._placeholder$$.pipe(filter((placeholder): placeholder is string => placeholder !== undefined)),
+      this.context$.pipe(switchMap((context) => this.dynformOptions.placeholder(context)))
+    ]).pipe(mergeAll());
   }
+
   /**
    * The validators of the controller.
    *
@@ -330,6 +324,7 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
       switchMap((context) => this.dynformOptions.validators(context))
     );
   }
+
   /**
    * The errors of the controller.
    *
@@ -347,115 +342,164 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
     );
   }
 
-  public setData(data: TData | undefined): void {
-    this._data$$.next(data);
+  public setData(data: Partial<TData>): void {
+    const partialEntries: [keyof TData, TData[keyof TData]][] = Object.entries(data) as [keyof TData, TData[keyof TData]][];
+    for (const [key, value] of partialEntries) {
+      const data$$: BehaviorSubject<TData[keyof TData] | undefined> = this.getDataByKey(key);
+      data$$.next(value);
+    }
   }
 
-  public updateData(updateFn: UpdateValueFn<TData | undefined>): void {
-    firstValueFrom(this.data$).then((data) => this.setData(updateFn(data)));
+  public async updateData(updateFn: UpdateValueFn<Partial<TData>>): Promise<void> {
+    const currentValue: Partial<TData> = await firstValueFrom(this.data$);
+    const newValue: Partial<TData> = await syncronizeValue(updateFn, currentValue);
+    this.setData(newValue);
   }
 
-  public patchData(data: Partial<TData>): void {
-    this.updateData((currentData) => Object.assign({}, currentData, data));
+  public patchData(data: Partial<TData>): Promise<void> {
+    return this.updateData((currentData) => Object.assign({}, currentData, data));
   }
 
   public setContext(context: DynFormContext<TValue, TData>): void {
     this._context$$.next(context);
   }
 
-  public updateContext(updateFn: UpdateValueFn<DynFormContext<TValue, TData>>): void {
-    firstValueFrom(this.context$).then((context) => this.setContext(updateFn(context)));
+  public async updateContext(updateFn: UpdateValueFn<DynFormContext<TValue, TData>>): Promise<void> {
+    const currentValue: DynFormContext<TValue, TData> | undefined = await firstValueFrom(this.context$);
+    const newValue: DynFormContext<TValue, TData> | undefined = await syncronizeValue(updateFn, currentValue);
+    this.setContext(newValue);
   }
 
   public writeValue(value: DynFormValue<TValue> | undefined): void {
     this._value$$.next(value);
   }
 
-  public updateValue(updateFn: UpdateValueFn<DynFormValue<TValue> | undefined>): void {
-    firstValueFrom(this.value$).then((value) => this.writeValue(updateFn(value)));
+  public async updateValue(updateFn: UpdateValueFn<DynFormValue<TValue> | undefined>): Promise<void> {
+    const currentValue: DynFormValue<TValue> | undefined = await firstValueFrom(this.value$);
+    const newValue: DynFormValue<TValue> | undefined = await syncronizeValue(updateFn, currentValue);
+    this.writeValue(newValue);
   }
 
-  public patchValue(value: DynFormValue<Partial<TValue>>): void {
-    this.updateValue((currentValue) => Object.assign({}, currentValue, value));
+  public patchValue(value: DynFormValue<Partial<TValue>>): Promise<void> {
+    return this.updateValue((currentValue: DynFormValue<TValue> | undefined) => {
+      if (currentValue === undefined) return value as DynFormValue<TValue> | undefined;
+      const oldValue: TValue = currentValue.value;
+      const newValue: TValue = Object.assign({}, oldValue, value.value);
+      return { ...currentValue, value: newValue };
+    });
   }
 
   public setEnableState(enable: boolean): void {
     this._disable$$.next(!enable);
   }
 
-  public updateEnableState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.enable$).then((enable) => this.setEnableState(updateFn(enable)));
+  public async updateEnableState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.enable$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setEnableState(newValue);
+  }
+
+  public enable(): void {
+    this.setEnableState(true);
   }
 
   public setDisableState(disable: boolean): void {
     this.setEnableState(!disable);
   }
 
-  public updateDisableState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.disable$).then((disable) => this.setDisableState(updateFn(disable)));
+  public async updateDisableState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.disable$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setDisableState(newValue);
+  }
+
+  public disable(): void {
+    this.setDisableState(true);
   }
 
   public setTouchedState(touched: boolean): void {
     this._touched$$.next(touched);
   }
 
-  public updateTouchedState(updateFn: UpdateValueFn<boolean>): void {
-    this._touched$$.next(updateFn(this._touched$$.value));
+  public async updateTouchedState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.touched$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setTouchedState(newValue);
   }
 
   public setUntouchedState(untouched: boolean): void {
     this.setTouchedState(!untouched);
   }
 
-  public updateUntouchedState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.untouched$).then((untouched) => this.setUntouchedState(updateFn(untouched)));
+  public async updateUntouchedState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.untouched$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setUntouchedState(newValue);
   }
 
   public setDirtyState(dirty: boolean): void {
     this._dirty$$.next(dirty);
   }
 
-  public updateDirtyState(updateFn: UpdateValueFn<boolean>): void {
-    this._dirty$$.next(updateFn(this._dirty$$.value));
+  public async updateDirtyState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.dirty$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setDirtyState(newValue);
   }
 
   public setPristineState(pristine: boolean): void {
     this.setDirtyState(!pristine);
   }
 
-  public updatePristineState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.pristine$).then((pristine) => this.setPristineState(updateFn(pristine)));
-  }
-
-  public setValidState(valid: boolean): void {
-    this._invalid$$.next(!valid);
-  }
-
-  public updateValidState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.valid$).then((valid) => this.setValidState(updateFn(valid)));
-  }
-
-  public setInvalidState(invalid: boolean): void {
-    this.setValidState(!invalid);
-  }
-
-  public updateInvalidState(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.invalid$).then((invalid) => this.setInvalidState(updateFn(invalid)));
+  public async updatePristineState(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.pristine$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setPristineState(newValue);
   }
 
   public setHidden(hide: boolean): void {
     this._hidden$$.next(hide);
   }
 
-  public updateHidden(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.hidden$).then((hide) => this.setHidden(updateFn(hide)));
+  public async updateHidden(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.hidden$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setHidden(newValue);
+  }
+
+  public hide(): void {
+    this.setHidden(true);
   }
 
   public setVisible(visible: boolean): void {
     this.setHidden(!visible);
   }
 
-  public updateVisible(updateFn: UpdateValueFn<boolean>): void {
-    firstValueFrom(this.visible$).then((visible) => this.setVisible(updateFn(visible)));
+  public async updateVisible(updateFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentValue: boolean = await firstValueFrom(this.visible$);
+    const newValue: boolean = await syncronizeValue(updateFn, currentValue);
+    this.setVisible(newValue);
+  }
+
+  public show(): void {
+    this.setVisible(true);
+  }
+
+  public setPlaceholder(placeholder: string): void {
+    this._placeholder$$.next(placeholder);
+  }
+
+  public async updatePlaceholder(updateFn: UpdateValueFn<string>): Promise<void> {
+    const currentValue: string = await firstValueFrom(this.placeholder$);
+    const newValue: string = await syncronizeValue(updateFn, currentValue);
+    this.setPlaceholder(newValue);
+  }
+
+  private getDataByKey(key: keyof TData): BehaviorSubject<TData[keyof TData] | undefined> {
+    const data$$: BehaviorSubject<TData[keyof TData] | undefined> | undefined = this._dataMap.get(key);
+    if (data$$) return data$$;
+    const newData$$: BehaviorSubject<TData[keyof TData] | undefined> = new BehaviorSubject<TData[keyof TData] | undefined>(undefined);
+    this._dataMap.set(key, newData$$);
+    return newData$$;
   }
 }

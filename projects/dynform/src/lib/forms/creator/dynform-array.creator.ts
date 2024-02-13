@@ -4,6 +4,6 @@ export interface DynFormArrayOptions {
 
 }
 
-export function createDynFormArray(options: DynFormArrayOptions): DynformArray {
+export function createDynFormArray<TValue, TData>(options: DynFormArrayOptions): DynformArray<TValue, TData> {
   throw new Error('Not implemented');
 }
