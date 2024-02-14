@@ -1,5 +1,4 @@
-import { Observable, Subject, firstValueFrom, of, skip, take } from 'rxjs';
-import { TestScheduler } from 'rxjs/testing';
+import { Observable, Subject, firstValueFrom, map, of, take } from 'rxjs';
 import { DynValidatorError } from '../models/dyn-validator.model';
 import { DynFormValue } from '../models/value.model';
 import { DynFormOptions } from './creator/dynform.creator';
@@ -8,7 +7,7 @@ import { FieldDynForm } from './field.dynform';
 
 function createOptions<TValue, TData>(options: Partial<DynFormOptions<TValue, TData>>): DynFormOptions<TValue, TData> {
   return Object.assign({
-    value: (context: DynFormContext<TValue, TData>) => of(''),
+    value: (context: DynFormContext<TValue, TData>) => of(undefined),
     data: (context: DynFormContext<TValue, TData>) => of({}),
     disabled: (context: DynFormContext<TValue, TData>) => of(false),
     hide: (context: DynFormContext<TValue, TData>) => of(false),
@@ -18,118 +17,86 @@ function createOptions<TValue, TData>(options: Partial<DynFormOptions<TValue, TD
 }
 
 describe('The FieldDynForm', () => {
-  let testScheduler: TestScheduler;
-
-  beforeEach(() => testScheduler = new TestScheduler((actual, expected) => {
-    return expect(actual).toEqual(expected);
-  }));
-
   describe('with a custom options', () => {
-
     it('should emit new hide value', (done) => {
-      testScheduler.run(({ expectObservable, cold }) => {
-        const marble: string = '             tfttf';
-        const espectMarble: string =        'tfttf';
-        const expectMarbleReverse: string = 'ftfft';
-        const value: { [key: string]: boolean } = {
-          t: true,
-          f: false,
-        };
-        const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
-          hide: () => cold<boolean>(marble, value),
-        }));
-        field.setContext({ name: 'root', dynForm: field });
-        const hide$:    Observable<boolean> = field.hidden$;
-        const visible$: Observable<boolean> = field.visible$;
-        expectObservable(hide$).toBe(espectMarble, value);
-        expectObservable(visible$).toBe(expectMarbleReverse, value);
-        done();
+      const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
+        hide: () => of(true, false)
+      }));
+      field.setContext({ name: 'root', dynForm: field });
+      let index: number = 0;
+      field.hidden$.subscribe((hidden: boolean) => {
+        switch (index++) {
+          case 0: expect(hidden).toBeTrue(); break;
+          case 1: expect(hidden).toBeFalse(); done(); break;
+        }
       });
     });
 
     it('should emit new disabled value', (done) => {
-      testScheduler.run(({ expectObservable, cold }) => {
-        const marble: string = '             tfttf';
-        const espectMarble: string = '       tfttf';
-        const espectMarbleReverse: string = 'ftfft';
-        const value: { [key: string]: boolean } = {
-          t: true,
-          f: false,
-        };
-        const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
-          disabled: () => cold<boolean>(marble, value),
-        }));
-        field.setContext({ name: 'root', dynForm: field });
-        const disabled$: Observable<boolean> = field.disable$;
-        const enabled$: Observable<boolean> = field.enable$;
-        expectObservable(disabled$).toBe(espectMarble, value);
-        expectObservable(enabled$).toBe(espectMarbleReverse, value);
-        done();
+      const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
+        disabled: () => of(true, false)
+      }));
+      field.setContext({ name: 'root', dynForm: field });
+      let index: number = 0;
+      field.enable$.subscribe((enabled: boolean) => {
+        switch (index++) {
+          case 0: expect(enabled).toBeFalse(); break;
+          case 1: expect(enabled).toBeTrue(); done(); break;
+        }
       });
     });
 
     it('should emit new value', (done) => {
-      testScheduler.run(({ expectObservable, cold }) => {
-        const marble: string = '      -abc';
-        const espectMarble: string = 'uabc';
-        const value: { [key: string]: DynFormValue<string> } = {
-          a: { value: 'benoit' },
-          b: { value: 'is a' },
-          c: { value: 'dream' },
-        };
-        const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
-          value: () => cold<DynFormValue<string>>(marble, value),
-        }));
-        field.setContext({ name: 'root', dynForm: field });
-        const value$: Observable<DynFormValue<string> | undefined> = field.value$;
-        expectObservable(value$).toBe(espectMarble, { ...value, u: undefined });
-        done();
+      const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
+        value: () => of('benoit', 'is', 'a', 'good', 'boi').pipe(
+          map((value) => ({ value }))
+        )
+      }));
+      field.setContext({ name: 'root', dynForm: field });
+      let index: number = 0;
+      field.value$.subscribe((value: DynFormValue<string> | undefined) => {
+        switch (index++) {
+          case 0: expect(value).toBeUndefined(); break;
+          case 1: expect(value).toEqual({ value: 'benoit' }); break;
+          case 2: expect(value).toEqual({ value: 'is' }); break;
+          case 3: expect(value).toEqual({ value: 'a' }); break;
+          case 4: expect(value).toEqual({ value: 'good' }); break;
+          case 5: expect(value).toEqual({ value: 'boi' }); done(); break;
+        }
       });
     });
 
     it('should emit new placeholder', (done) => {
-      testScheduler.run(({ expectObservable, cold }) => {
-        const marble: string = '      abc';
-        const espectMarble: string = 'abc';
-        const value: { [key: string]: string } = {
-          a: 'benoit',
-          b: 'is a',
-          c: 'dream',
-        };
-        const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
-          placeholder: () => cold<string>(marble, value),
-        }));
-        field.setContext({ name: 'root', dynForm: field });
-        const placeholder$: Observable<string> = field.placeholder$;
-        expectObservable(placeholder$).toBe(espectMarble, { ...value, u: '' });
-        done();
+      const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
+        placeholder: () => of('benoit', 'is', 'a', 'baad', 'boi')
+      }));
+      field.setContext({ name: 'root', dynForm: field });
+      let index: number = 0;
+      field.placeholder$.subscribe((placeholder: string) => {
+        switch (index++) {
+          case 0: expect(placeholder).toEqual('benoit'); break;
+          case 1: expect(placeholder).toEqual('is'); break;
+          case 2: expect(placeholder).toEqual('a'); break;
+          case 3: expect(placeholder).toEqual('baad'); break;
+          case 4: expect(placeholder).toEqual('boi'); done(); break;
+        }
       });
     });
 
-    it('should emit new validators', (done) => {
-      testScheduler.run(({ expectObservable, cold }) => {
-        const marbleValidator1: string = '    -f-tf-tt-t';
-        const marbleValidator2: string = '    --t--f--t';
-        const marbleValidateEspect: string = 't-ftfffftt';
-        const marbleInvalidEspect: string =  'f-tfttttff';
-
-        const errorValues: { [key: string]: DynValidatorError | undefined } = { t: undefined, f: { message: 'error' } };
-        const validValues: { [key: string]: boolean } = { t: true, f: false };
-
-        const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
-          validators: () => of([
-            () => cold<DynValidatorError | undefined>(marbleValidator1, errorValues),
-            () => cold<DynValidatorError | undefined>(marbleValidator2, errorValues),
-          ]),
-        }));
-        field.setContext({ name: 'root', dynForm: field });
-
-        const valid$: Observable<boolean> = field.valid$;
-        const invalid$: Observable<boolean> = field.invalid$;
-        expectObservable(valid$).toBe(marbleValidateEspect, validValues);
-        expectObservable(invalid$).toBe(marbleInvalidEspect, validValues);
-        done();
-      });
+    it('should emit new validators', async () => {
+      const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({
+        validators: () => of([
+          () => of({ message: 'benoit can\'t be a baad boi' }),
+          () => of({ message: 'geoffrey can\'t be a good boi' }),
+        ])
+      }));
+      field.setContext({ name: 'root', dynForm: field });
+      const validatorsErrors$: Observable<DynValidatorError[]> = field.validatorsErrors$;
+      const validatorsErrors: DynValidatorError[] = await firstValueFrom(validatorsErrors$);
+      expect(validatorsErrors).toEqual([
+        { message: 'benoit can\'t be a baad boi' },
+        { message: 'geoffrey can\'t be a good boi' },
+      ]);
     });
 
     it('should emit new data', (done) => {
@@ -143,16 +110,13 @@ describe('The FieldDynForm', () => {
         })
       }));
       field.setContext({ name: 'root', dynForm: field });
-      let index = 0
-      field.data$.pipe(take(7)).subscribe((result) => {
+      let index: number = 0
+      field.data$.pipe(take(4)).subscribe((result) => {
         switch(index++) {
-          case 0: expect(result).toEqual({ name: undefined                  }); break;
-          case 1: expect(result).toEqual({ name: undefined,  age: undefined }); break;
-          case 2: expect(result).toEqual({ name: 'benoit',   age: undefined }); break;
-          case 3: expect(result).toEqual({ name: 'benoit',   age: 1         }); break;
-          case 4: expect(result).toEqual({ name: 'benoit',   age: 2         }); break;
-          case 5: expect(result).toEqual({ name: 'geoffrey', age: 2         }); break;
-          case 6: expect(result).toEqual({ name: 'geoffrey', age: 3         }); done(); break;
+          case 0: expect(result).toEqual({ name: 'benoit',   age: 1         }); break;
+          case 1: expect(result).toEqual({ name: 'benoit',   age: 2         }); break;
+          case 2: expect(result).toEqual({ name: 'geoffrey', age: 2         }); break;
+          case 3: expect(result).toEqual({ name: 'geoffrey', age: 3         }); done(); break;
         }
       })
       name$$.next('benoit');
@@ -165,7 +129,6 @@ describe('The FieldDynForm', () => {
   });
 
   describe('when editing the input value', () => {
-
     it('should emit new value', async () => {
       const field: FieldDynForm<string, {}> = new FieldDynForm(createOptions({}));
       field.setContext({ name: 'root', dynForm: field });
@@ -309,25 +272,25 @@ describe('The FieldDynForm', () => {
       const data$: Observable<Partial<Data>> = field.data$;
       const value: { [key: string]: Data } = {
         a: { name: 'benoit',   age: 1 },
-        b: { name: 'geoffrey', age: 1 },
-        c: { name: 'aymeric',  age: 1 },
-        d: { name: 'ugo',      age: 1 },
+        b: { name: 'geoffrey', age: 2 },
+        c: { name: 'aymeric',  age: 3 },
+        d: { name: 'ugo',      age: 4 },
       };
 
       field.setData(value['a']);
-      const result2: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result2: Partial<Data> = await firstValueFrom(data$);
       expect(result2).toEqual(value['a']);
 
       field.setData(value['b']);
-      const result3: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result3: Partial<Data> = await firstValueFrom(data$);
       expect(result3).toEqual(value['b']);
 
       field.setData(value['c']);
-      const result4: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result4: Partial<Data> = await firstValueFrom(data$);
       expect(result4).toEqual(value['c']);
 
       field.setData(value['d']);
-      const result5: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result5: Partial<Data> = await firstValueFrom(data$);
       expect(result5).toEqual(value['d']);
     });
 
@@ -338,11 +301,11 @@ describe('The FieldDynForm', () => {
       const data$: Observable<Partial<Data>> = field.data$;
 
       field.setData({ name: 'benoit', age: 1 });
-      const result2: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result2: Partial<Data> = await firstValueFrom(data$);
       expect(result2).toEqual({ name: 'benoit', age: 1 });
 
       await field.updateData((data) => ({ name: (data?.name ?? '').toUpperCase(), age: 0 }));
-      const result3: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result3: Partial<Data> = await firstValueFrom(data$);
       expect(result3).toEqual({ name: 'BENOIT', age: 0 });
     });
 
@@ -353,11 +316,11 @@ describe('The FieldDynForm', () => {
       const data$: Observable<Partial<Data>> = field.data$;
 
       field.setData({ name: 'benoit', age: 1 });
-      const result2: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result2: Partial<Data> = await firstValueFrom(data$);
       expect(result2).toEqual({ name: 'benoit', age: 1 });
 
       await field.updateData((data) => Promise.resolve(({ name: (data?.name ?? '').toUpperCase(), age: 0 })));
-      const result3: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result3: Partial<Data> = await firstValueFrom(data$);
       expect(result3).toEqual({ name: 'BENOIT', age: 0 });
     });
 
@@ -368,11 +331,11 @@ describe('The FieldDynForm', () => {
       const data$: Observable<Partial<Data>> = field.data$;
 
       field.setData({ name: 'benoit', age: 1 });
-      const result2: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result2: Partial<Data> = await firstValueFrom(data$);
       expect(result2).toEqual({ name: 'benoit', age: 1 });
 
       await field.updateData((data) => of(({ name: (data?.name ?? '').toUpperCase(), age: 0 })));
-      const result3: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result3: Partial<Data> = await firstValueFrom(data$);
       expect(result3).toEqual({ name: 'BENOIT', age: 0 });
     });
 
@@ -383,15 +346,15 @@ describe('The FieldDynForm', () => {
       const data$: Observable<Partial<Data>> = field.data$;
 
       field.setData({ name: 'benoit', age: 1 });
-      const result2: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result2: Partial<Data> = await firstValueFrom(data$);
       expect(result2).toEqual({ name: 'benoit', age: 1 });
 
       await field.patchData({ name: 'Geoffrey' });
-      const result3: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result3: Partial<Data> = await firstValueFrom(data$);
       expect(result3).toEqual({ name: 'Geoffrey', age: 1 });
 
       await field.patchData({ age: 2 });
-      const result4: Partial<Data> = await firstValueFrom(data$.pipe(skip(1)));
+      const result4: Partial<Data> = await firstValueFrom(data$);
       expect(result4).toEqual({ name: 'Geoffrey', age: 2 });
     });
 

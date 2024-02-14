@@ -1,11 +1,11 @@
-import { firstValueFrom, of, skip } from 'rxjs';
-import { DynValidator } from '../../models/dyn-validator.model';
+import { ValidationErrors } from '@angular/forms';
+import { Observer, firstValueFrom, of, skip } from 'rxjs';
+import { DynValidatorError } from '../../models/dyn-validator.model';
 import { DynFormValue } from '../../models/value.model';
 import { DynForm } from '../dynform.model';
 import { createDynForm } from './dynform.creator';
 
 describe('The createDynForm function', () => {
-
   it('should create a new DynForm instance with default options', async () => {
     const dynForm: DynForm<string> = createDynForm();
     dynForm.setContext({ name: 'test', dynForm });
@@ -13,14 +13,17 @@ describe('The createDynForm function', () => {
     const disabled: boolean = await firstValueFrom(dynForm.disable$);
     const value: DynFormValue<string> | undefined = await firstValueFrom(dynForm.value$);
     const placeholder: string = await firstValueFrom(dynForm.placeholder$);
-    const validators: DynValidator<string, {}>[] = await firstValueFrom(dynForm.validators$);
-    const data: {} = await firstValueFrom(dynForm.data$);
+    const validators: DynValidatorError[] = await firstValueFrom(dynForm.validatorsErrors$);
     expect(hide).toBeFalse();
     expect(disabled).toBeFalse();
     expect(value).toBeUndefined();
     expect(placeholder).toBe('');
     expect(validators).toEqual([]);
-    expect(data).toEqual({})
+    const oberserver: Observer<{}> = jasmine.createSpyObj<Observer<{}>>('Observer', ['next', 'error', 'complete']);
+    dynForm.data$.subscribe(oberserver);
+    expect(oberserver.next).not.toHaveBeenCalled();
+    expect(oberserver.error).not.toHaveBeenCalled();
+    expect(oberserver.complete).not.toHaveBeenCalled();
   });
 
   it('should create a new DynForm instance and override the default options', async () => {
@@ -30,7 +33,7 @@ describe('The createDynForm function', () => {
       value: () => of({ value: 'test' }),
       placeholder: () => of('test'),
       validators: () => of([
-        () => of(undefined),
+        () => of({ message: 'test' }),
       ]),
       data: () => of({
         test: () => of('test'),
@@ -41,13 +44,13 @@ describe('The createDynForm function', () => {
     const disabled: boolean = await firstValueFrom(dynForm.disable$);
     const value: DynFormValue<string> | undefined = await firstValueFrom(dynForm.value$.pipe(skip(1)));
     const placeholder: string = await firstValueFrom(dynForm.placeholder$);
-    const validators: DynValidator<string, { test: string }>[] = await firstValueFrom(dynForm.validators$);
-    const data: Partial<{ test: string }> = await firstValueFrom(dynForm.data$.pipe(skip(1)));
+    const validators: ValidationErrors[] = await firstValueFrom(dynForm.validatorsErrors$);
+    const data: Partial<{ test: string }> = await firstValueFrom(dynForm.data$);
     expect(hide).toBeTrue();
     expect(disabled).toBeTrue();
     expect(value).toEqual({ value: 'test' });
     expect(placeholder).toBe('test');
-    expect(validators.length).toBe(1);
+    expect(validators).toEqual([{ message: 'test' }]);
     expect(data).toEqual({ test: 'test' });
   });
 

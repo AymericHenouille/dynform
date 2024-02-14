@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 import { DynOperable, DynOperation } from '../../models/dyn-operation.model';
 import { DynValidator } from '../../models/dyn-validator.model';
 import { DynFormValue } from '../../models/value.model';
@@ -32,7 +32,7 @@ export interface DynFormOptions<TValue, TData> {
   /**
    * Operation to determine the data of the form.
    */
-  data: DynOperation<TValue, TData, DynOperable<TValue, TData, TData> | undefined>;
+  data: DynOperation<TValue, TData, DynOperable<TValue, TData, TData>>;
 }
 
 /**
@@ -54,7 +54,7 @@ export function createDynForm<TValue, TData>(options: Partial<DynFormOptions<TVa
     value: () => of(undefined),
     placeholder: () => of(''),
     validators: () => of([]),
-    data: () => of(undefined),
+    data: () => EMPTY,
   }, options);
   return new FieldDynForm<TValue, TData>(fullOptions);
 }

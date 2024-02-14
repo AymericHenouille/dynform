@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { DynValidator, DynValidatorError } from '../models/dyn-validator.model';
+import { DynValidatorError } from '../models/dyn-validator.model';
 import { UpdateValueFn } from '../models/update-value.model';
 import { DynFormValue } from '../models/value.model';
 import { DynFormContext } from './dynform-context.model';
@@ -17,7 +17,7 @@ export interface DynForm<TValue, TData = {}> {
   /**
    * The data of the controller.
    */
-  data$: Observable<Partial<TData>>;
+  data$: Observable<TData>;
   /**
    * The enabled state of the controller.
    * It is used to represent the enabled state in real time.
@@ -86,10 +86,6 @@ export interface DynForm<TValue, TData = {}> {
    * The placeholder of the controller.
    */
   placeholder$: Observable<string>;
-  /**
-   * The validators of the controller.
-   */
-  validators$: Observable<DynValidator<TValue, TData>[]>;
   /**
    * The errors of the controller.
    */

@@ -136,7 +136,6 @@ describe('The GroupDynForm', () => {
       const value$: Observable<DynFormValue<User> | undefined> = groupDynForm.value$;
       let index: number = 0;
       value$.subscribe((value: DynFormValue<User> | undefined) => {
-        console.log(value);
         switch (index++) {
           case 0:
             expect(value).toEqual({ value: { name: 'Benoit', age: undefined } });
