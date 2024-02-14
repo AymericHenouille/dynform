@@ -383,8 +383,8 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
   public patchValue(value: DynFormValue<Partial<TValue>>): Promise<void> {
     return this.updateValue((currentValue: DynFormValue<TValue> | undefined) => {
       if (currentValue === undefined) return value as DynFormValue<TValue> | undefined;
-      const oldValue: TValue = currentValue.value;
-      const newValue: TValue = Object.assign({}, oldValue, value.value);
+      const oldValue: Partial<TValue> = currentValue.value;
+      const newValue: Partial<TValue> = Object.assign({}, oldValue, value.value);
       return { ...currentValue, value: newValue };
     });
   }

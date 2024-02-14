@@ -1,211 +1,41 @@
 import { Observable, combineLatest, map } from 'rxjs';
-import { DynValidator, DynValidatorError } from '../models/dyn-validator.model';
-import { UpdateValueFn } from '../models/update-value.model';
 import { DynFormValue } from '../models/value.model';
 import { DynFormGroupOptions } from './creator/dynform-group.creator';
-import { DynFormContext } from './dynform-context.model';
-import { DynFormStatus } from './dynform-status.model';
+import { DynFormOptions } from './creator/dynform.creator';
 import { DynForm } from './dynform.model';
+import { FieldDynForm } from './field.dynform';
 
-export class GroupDynForm<TValue, TData> implements DynForm<TValue, TData> {
+/**
+ * Represents a group form controller.
+ */
+export class GroupDynForm<TValue, TData> extends FieldDynForm<TValue, TData>{
+  /**
+   * Creates an instance of GroupDynForm.
+   * @param dynformGroupOptions The options of the form controller.
+   * @param dynformOptions The options of the form controller.
+   */
   public constructor(
     private readonly dynformGroupOptions: DynFormGroupOptions<TValue, TData>,
-  ) { }
+    dynformOptions: DynFormOptions<TValue, TData>,
+  ) { super(dynformOptions); }
 
-  public get value$(): Observable<DynFormValue<TValue> | undefined> {
-    const entries: [keyof TValue, DynForm<TValue[keyof TValue], any>][] = Object.entries(this.dynformGroupOptions) as [keyof TValue, DynForm<TValue[keyof TValue], any>][];
-    const values$: Observable<{ [x: string]: DynFormValue<TValue[keyof TValue]> | undefined; }>[] = entries.map(([key, dynform]) => dynform?.value$.pipe(map(value => ({ [key]: value }))));
+  public override get value$(): Observable<DynFormValue<TValue> | undefined> {
+    const keys: (keyof TValue)[] = Object.keys(this.dynformGroupOptions) as (keyof TValue)[];
+    const values$: Observable<Partial<TValue>>[] = keys.map((key: keyof TValue) => this.dynformGroupOptions[key].value$.pipe(
+      map((value) => value?.value),
+      map((value) => ({ [key]: value }) as Partial<TValue>),
+    ));
     return combineLatest(values$).pipe(
-      map(values => values.reduce((acc, value) => ({ ...acc, ...value }), {} as TValue)),
-      map((value) => ({ value }))
+      map((values: Partial<TValue>[]) => values.reduce((acc, value) => ({ ...acc, ...value }), {})),
+      map((value) => ({ value }) as DynFormValue<TValue>),
     );
   }
 
-  public get data$(): Observable<Partial<TData>> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get disable$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get enable$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get touched$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get untouched$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get dirty$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get pristine$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get invalid$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get valid$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get status$(): Observable<DynFormStatus> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get context$(): Observable<DynFormContext<TValue, TData>> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get hidden$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get visible$(): Observable<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get placeholder$(): Observable<string> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get validators$(): Observable<DynValidator<TValue, TData>[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  public get validatorsErrors$(): Observable<DynValidatorError[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  public getChild<Key extends keyof TValue>(key: Key): DynForm<TValue[Key], TData> {
-    return this.dynformGroupOptions[key];
-  }
-
-  public setData(data: Partial<TData>): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateData(updateFn: UpdateValueFn<Partial<TData>>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public patchData(data: Partial<TData>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setContext(context: DynFormContext<TValue, TData>): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateContext(updateFn: UpdateValueFn<DynFormContext<TValue, TData>>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public writeValue(value: DynFormValue<TValue> | undefined): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateValue(updateFn: UpdateValueFn<DynFormValue<TValue> | undefined>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public patchValue(value: DynFormValue<Partial<TValue>>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setEnableState(enable: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateEnableState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public enable(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public setDisableState(disable: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateDisableState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public disable(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public setTouchedState(touched: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateTouchedState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setUntouchedState(untouched: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateUntouchedState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setDirtyState(dirty: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateDirtyState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setPristineState(pristine: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updatePristineState(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setHidden(hide: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateHidden(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public hide(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public setVisible(visible: boolean): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updateVisible(updateFn: UpdateValueFn<boolean>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  public show(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public setPlaceholder(placeholder: string): void {
-    throw new Error('Method not implemented.');
-  }
-
-  public updatePlaceholder(updateFn: UpdateValueFn<string>): Promise<void> {
-    throw new Error('Method not implemented.');
+  public override writeValue(value: DynFormValue<TValue> | undefined): void {
+    for (const key in this.dynformGroupOptions) {
+      const form: DynForm<TValue[keyof TValue], TData> = this.dynformGroupOptions[key];
+      const childValue: TValue[keyof TValue] = value?.value[key] as TValue[keyof TValue];
+      form.writeValue({ value: childValue } as DynFormValue<TValue[keyof TValue]>);
+    }
   }
 }
