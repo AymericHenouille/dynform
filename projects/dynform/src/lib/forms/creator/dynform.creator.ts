@@ -2,7 +2,6 @@ import { EMPTY, of } from 'rxjs';
 import { DynOperable, DynOperation } from '../../models/dyn-operation.model';
 import { DynValidator } from '../../models/dyn-validator.model';
 import { DynFormValue } from '../../models/value.model';
-import { DynForm } from '../dynform.model';
 import { FieldDynForm } from '../field.dynform';
 
 /**
@@ -47,7 +46,7 @@ export interface DynFormOptions<TValue, TData> {
  * @param options Partial options to override the default ones.
  * @returns A new DynForm instance.
  */
-export function createDynForm<TValue, TData>(options: Partial<DynFormOptions<TValue, TData>> = {}): DynForm<TValue, TData> {
+export function createDynForm<TValue, TData>(options: Partial<DynFormOptions<TValue, TData>> = {}): FieldDynForm<TValue, TData> {
   const fullOptions: DynFormOptions<TValue, TData> = Object.assign({
     hide: () => of(false),
     disabled: () => of(false),

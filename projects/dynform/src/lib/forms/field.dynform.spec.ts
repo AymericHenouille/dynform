@@ -2,17 +2,16 @@ import { Observable, Subject, firstValueFrom, map, of, take } from 'rxjs';
 import { DynValidatorError } from '../models/dyn-validator.model';
 import { DynFormValue } from '../models/value.model';
 import { DynFormOptions } from './creator/dynform.creator';
-import { DynFormContext } from './dynform-context.model';
 import { FieldDynForm } from './field.dynform';
 
 function createOptions<TValue, TData>(options: Partial<DynFormOptions<TValue, TData>>): DynFormOptions<TValue, TData> {
   return Object.assign({
-    value: (context: DynFormContext<TValue, TData>) => of(undefined),
-    data: (context: DynFormContext<TValue, TData>) => of({}),
-    disabled: (context: DynFormContext<TValue, TData>) => of(false),
-    hide: (context: DynFormContext<TValue, TData>) => of(false),
-    validators: (context: DynFormContext<TValue, TData>) => of([]),
-    placeholder: (context: DynFormContext<TValue, TData>) => of(''),
+    value: () => of(undefined),
+    data: () => of({}),
+    disabled: () => of(false),
+    hide: () => of(false),
+    validators: () => of([]),
+    placeholder: () => of(''),
   }, options);
 }
 

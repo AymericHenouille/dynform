@@ -1,4 +1,4 @@
-import { BehaviorSubject, EMPTY, Observable, combineLatest, filter, firstValueFrom, map, merge, mergeAll, of, switchMap } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, concatMap, distinctUntilChanged, filter, firstValueFrom, map, merge, mergeAll, of, shareReplay } from 'rxjs';
 import { DynOperable, DynOperation } from '../models/dyn-operation.model';
 import { DynValidatorError } from '../models/dyn-validator.model';
 import { UpdateValueFn, syncronizeValue } from '../models/update-value.model';
@@ -86,18 +86,27 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
   ) { }
 
   /**
+   * The context of the controller.
+   *
+   * @readonly
+   * @type {Observable<DynFormContext<TValue, TData>>}
+   * @memberof FieldDynForm
+   */
+  public readonly context$: Observable<DynFormContext<TValue, TData>> = this._context$$.pipe(
+    filter((context: DynFormContext<TValue, TData> | undefined): context is DynFormContext<TValue, TData> => context !== undefined)
+  );
+
+  /**
    * The value of the controller.
    *
    * @readonly
    * @type {(Observable<TValue | undefined>)}
    * @memberof FieldDynForm
    */
-  public get value$(): Observable<DynFormValue<TValue> | undefined> {
-    return merge([
-      this._value$$.asObservable(),
-      this.context$.pipe(switchMap((context: DynFormContext<TValue, TData>) => this.dynformOptions.value(context))),
-    ]).pipe(mergeAll());
-  }
+  public readonly value$: Observable<DynFormValue<TValue> | undefined> = merge([
+    this._value$$.asObservable(),
+    this.context$.pipe(concatMap((context: DynFormContext<TValue, TData>) => this.dynformOptions.value(context))),
+  ]).pipe(mergeAll(), shareReplay(1), distinctUntilChanged());
 
   /**
    * The data of the controller.
@@ -106,22 +115,21 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {(Observable<TData | undefined>)}
    * @memberof FieldDynForm
    */
-  public get data$(): Observable<TData> {
-    return this.context$.pipe(
-      switchMap((context: DynFormContext<TValue, TData>) => this.dynformOptions.data(context).pipe(
-        map((operableData) => Object.entries(operableData as DynOperable<TValue, TData, TData>) as [keyof TData, DynOperation<TValue, TData, TData[keyof TData]>][]),
-        map((operableEntries) => operableEntries.concat([...this._dataMap.keys()].map((key) => [key, () => EMPTY]))),
-        map((operableEntries) => operableEntries.filter(([key], index, array) => array.findIndex(([searchKey]) => searchKey === key) === index)),
-        map((operableEntries) => operableEntries.map(([key, operation]) => {
-          const operation$: Observable<TData[keyof TData]> = operation(context);
-          const data$: Observable<TData[keyof TData]> = this.getDataByKey(key).pipe(filter((data): data is TData[keyof TData] => data !== undefined));
-          return merge(operation$, data$).pipe(map((result) => ({ [key]: result })));
-        })),
-      )),
-      switchMap((entries) => combineLatest(entries)),
-      map((entries) => entries.reduce((acc, entry) => Object.assign(acc, entry), {})),
-    ) as Observable<TData>;
-  }
+  public readonly data$: Observable<TData> = this.context$.pipe(
+    concatMap((context: DynFormContext<TValue, TData>) => this.dynformOptions.data(context).pipe(
+      map((operableData) => Object.entries(operableData as DynOperable<TValue, TData, TData>) as [keyof TData, DynOperation<TValue, TData, TData[keyof TData]>][]),
+      map((operableEntries) => operableEntries.concat([...this._dataMap.keys()].map((key) => [key, () => EMPTY]))),
+      map((operableEntries) => operableEntries.filter(([key], index, array) => array.findIndex(([searchKey]) => searchKey === key) === index)),
+      map((operableEntries) => operableEntries.map(([key, operation]) => {
+        const operation$: Observable<TData[keyof TData]> = operation(context);
+        const data$: Observable<TData[keyof TData]> = this.getDataByKey(key).pipe(filter((data): data is TData[keyof TData] => data !== undefined));
+        return merge(operation$, data$).pipe(map((result) => ({ [key]: result })));
+      })),
+    )),
+    concatMap((entries) => combineLatest(entries)),
+    map((entries) => entries.reduce((acc, entry) => Object.assign(acc, entry), {})),
+    shareReplay(1),
+  ) as Observable<TData>;
 
   /**
    * The disabled state of the controller.
@@ -130,12 +138,11 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get disable$(): Observable<boolean> {
-    return merge([
-      this._disable$$.pipe(filter((disable): disable is boolean => disable !== undefined)),
-      this.context$.pipe(switchMap((context) => this.dynformOptions.disabled(context))),
-    ]).pipe(mergeAll());
-  }
+  public readonly disable$: Observable<boolean> = merge([
+    this._disable$$.pipe(filter((disable): disable is boolean => disable !== undefined)),
+    this.context$.pipe(concatMap((context) => this.dynformOptions.disabled(context))),
+  ]).pipe(mergeAll());
+
 
   /**
    * The enabled state of the controller.
@@ -144,11 +151,9 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get enable$(): Observable<boolean> {
-    return this.disable$.pipe(
-      map((disable) => !disable)
-    );
-  }
+  public readonly enable$: Observable<boolean> = this.disable$.pipe(
+    map((disable) => !disable)
+  );
 
   /**
    * The touched state of the controller.
@@ -157,9 +162,7 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get touched$(): Observable<boolean> {
-    return this._touched$$.asObservable();
-  }
+  public readonly touched$: Observable<boolean> = this._touched$$.asObservable();
 
   /**
    * The untouched state of the controller.
@@ -168,11 +171,9 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get untouched$(): Observable<boolean> {
-    return this.touched$.pipe(
-      map((touched) => !touched)
-    );
-  }
+  public readonly untouched$: Observable<boolean> = this.touched$.pipe(
+    map((touched) => !touched)
+  );
 
   /**
    * The dirty state of the controller.
@@ -181,9 +182,7 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get dirty$(): Observable<boolean> {
-    return this._dirty$$.asObservable();
-  }
+  public readonly dirty$: Observable<boolean> = this._dirty$$.asObservable();
 
   /**
    * The pristine state of the controller.
@@ -192,11 +191,9 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get pristine$(): Observable<boolean> {
-    return this.dirty$.pipe(
-      map((dirty) => !dirty)
-    );
-  }
+  public readonly pristine$: Observable<boolean> = this.dirty$.pipe(
+    map((dirty) => !dirty)
+  );
 
   /**
    * The errors of the controller.
@@ -205,15 +202,15 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<DynValidatorError[]>}
    * @memberof FieldDynForm
    */
-  public get validatorsErrors$(): Observable<DynValidatorError[]> {
-    return this.context$.pipe(
-      switchMap((context) => this.dynformOptions.validators(context).pipe(
-        map((validators) => validators.map((validator) => validator(context))),
-        switchMap((validators) => validators.length > 0 ? combineLatest(validators) : of([])),
-        map((errors) => errors.filter((error): error is DynValidatorError => error !== undefined))
-      )),
-    );
-  }
+  public readonly validatorsErrors$: Observable<DynValidatorError[]> = this.context$.pipe(
+    concatMap((context) => this.dynformOptions.validators(context).pipe(
+      map((validators) => validators.map((validator) => validator(context))),
+      concatMap((validators) => validators.length > 0 ? combineLatest(validators) : of([])),
+      map((errors) => errors.filter((error): error is DynValidatorError => error !== undefined))
+    )),
+    shareReplay(1)
+  );
+
 
   /**
    * The invalid state of the controller.
@@ -222,11 +219,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get invalid$(): Observable<boolean> {
-    return this.validatorsErrors$.pipe(
-      map((errors) => errors.length > 0),
-    );
-  }
+  public readonly invalid$: Observable<boolean> = this.validatorsErrors$.pipe(
+    map((errors) => errors.length > 0),
+  );
+
 
   /**
    * The valid state of the controller.
@@ -235,11 +231,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get valid$(): Observable<boolean> {
-    return this.invalid$.pipe(
-      map((invalid) => !invalid)
-    );
-  }
+  public readonly valid$: Observable<boolean> = this.invalid$.pipe(
+    map((invalid) => !invalid)
+  );
+
 
   /**
    * The status of the controller.
@@ -248,24 +243,9 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<DynFormStatus>}
    * @memberof FieldDynForm
    */
-  public get status$(): Observable<DynFormStatus> {
-    return this._context$$.pipe(
-      map((context) => context ? DynFormStatus.RUNNING : DynFormStatus.WAITING)
-    );
-  }
-
-  /**
-   * The context of the controller.
-   *
-   * @readonly
-   * @type {Observable<DynFormContext<TValue, TData>>}
-   * @memberof FieldDynForm
-   */
-  public get context$(): Observable<DynFormContext<TValue, TData>> {
-    return this._context$$.pipe(
-      filter((context: DynFormContext<TValue, TData> | undefined): context is DynFormContext<TValue, TData> => context !== undefined)
-    );
-  }
+  public readonly status$: Observable<DynFormStatus> = this._context$$.pipe(
+    map((context) => context ? DynFormStatus.RUNNING : DynFormStatus.WAITING)
+  );
 
   /**
    * The hidden state of the controller.
@@ -274,12 +254,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get hidden$(): Observable<boolean> {
-    return merge([
-      this._hidden$$.pipe(filter((hidden): hidden is boolean => hidden !== undefined)),
-      this.context$.pipe(switchMap((context) => this.dynformOptions.hide(context))),
-    ]).pipe(mergeAll());
-  }
+  public readonly hidden$: Observable<boolean> = merge([
+    this._hidden$$.pipe(filter((hidden): hidden is boolean => hidden !== undefined)),
+    this.context$.pipe(concatMap((context) => this.dynformOptions.hide(context))),
+  ]).pipe(mergeAll());
 
   /**
    * The visible state of the controller.
@@ -288,11 +266,9 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof FieldDynForm
    */
-  public get visible$(): Observable<boolean> {
-    return this.hidden$.pipe(
-      map((hidden) => !hidden)
-    );
-  }
+  public readonly visible$: Observable<boolean> = this.hidden$.pipe(
+    map((hidden) => !hidden)
+  );
 
   /**
    * The placeholder of the controller.
@@ -301,12 +277,10 @@ export class FieldDynForm<TValue, TData> implements DynForm<TValue, TData> {
    * @type {Observable<string>}
    * @memberof FieldDynForm
    */
-  public get placeholder$(): Observable<string> {
-    return merge([
-      this._placeholder$$.pipe(filter((placeholder): placeholder is string => placeholder !== undefined)),
-      this.context$.pipe(switchMap((context) => this.dynformOptions.placeholder(context)))
-    ]).pipe(mergeAll());
-  }
+  public readonly placeholder$: Observable<string> = merge([
+    this._placeholder$$.pipe(filter((placeholder): placeholder is string => placeholder !== undefined)),
+    this.context$.pipe(concatMap((context) => this.dynformOptions.placeholder(context)))
+  ]).pipe(mergeAll(), shareReplay(1));
 
   public setData(data: Partial<TData>): void {
     const partialEntries: [keyof TData, TData[keyof TData]][] = Object.entries(data) as [keyof TData, TData[keyof TData]][];

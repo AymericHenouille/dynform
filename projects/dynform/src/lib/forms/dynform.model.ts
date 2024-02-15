@@ -83,10 +83,6 @@ export interface DynForm<TValue, TData = {}> {
    */
   visible$: Observable<boolean>;
   /**
-   * The placeholder of the controller.
-   */
-  placeholder$: Observable<string>;
-  /**
    * The errors of the controller.
    */
   validatorsErrors$: Observable<DynValidatorError[]>;
@@ -107,16 +103,6 @@ export interface DynForm<TValue, TData = {}> {
    * @param value The new value for the controller.
    */
   patchValue(value: DynFormValue<Partial<TValue>>): Promise<void>;
-  /**
-   * Set the validators of the controller.
-   * @param placeholder The new validators for the controller.
-   */
-  setPlaceholder(placeholder: string): void;
-  /**
-   * Update the validators of the controller.
-   * @param updateFn The function that will update the validators for the controller.
-   */
-  updatePlaceholder(updateFn: UpdateValueFn<string>): Promise<void>;
   /**
    * Set the value of the controller data.
    * @param data The new data for the controller.

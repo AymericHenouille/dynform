@@ -2,12 +2,12 @@ import { ValidationErrors } from '@angular/forms';
 import { Observer, firstValueFrom, of, skip } from 'rxjs';
 import { DynValidatorError } from '../../models/dyn-validator.model';
 import { DynFormValue } from '../../models/value.model';
-import { DynForm } from '../dynform.model';
+import { FieldDynForm } from '../field.dynform';
 import { createDynForm } from './dynform.creator';
 
 describe('The createDynForm function', () => {
   it('should create a new DynForm instance with default options', async () => {
-    const dynForm: DynForm<string> = createDynForm();
+    const dynForm: FieldDynForm<string, {}> = createDynForm();
     dynForm.setContext({ name: 'test', dynForm });
     const hide: boolean = await firstValueFrom(dynForm.hidden$);
     const disabled: boolean = await firstValueFrom(dynForm.disable$);
@@ -27,7 +27,7 @@ describe('The createDynForm function', () => {
   });
 
   it('should create a new DynForm instance and override the default options', async () => {
-    const dynForm: DynForm<string, { test: string }> = createDynForm({
+    const dynForm: FieldDynForm<string, { test: string }> = createDynForm({
       hide: () => of(true),
       disabled: () => of(true),
       value: () => of({ value: 'test' }),
