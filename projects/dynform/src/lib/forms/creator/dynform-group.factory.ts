@@ -1,5 +1,5 @@
-import { DynForm, DynformGroup } from '../dynform.model';
-import { DynFormOptions } from './dynform.creator';
+import { DynForm, DynformGroup } from '../../models/dyn-form/dynform.model';
+import { DynFormOptions } from './dynform.factory';
 
 export type DynFormGroupOptions<TValue, TData> = {
   [key in keyof TValue]: DynForm<TValue[key], TData>;

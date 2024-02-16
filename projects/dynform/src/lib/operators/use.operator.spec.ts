@@ -1,6 +1,6 @@
 import { Observer, of } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 import { use, useEmpty, useFrom, useIf, useUndefined, useWhen } from './use.operator';
 
 describe('The use operators.', () => {
@@ -9,7 +9,7 @@ describe('The use operators.', () => {
     it('should return a new DynOperation with the given value', (done) => {
       const value: string = 'value';
       const operation: DynOperation<unknown, unknown, string> = use(value);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -20,7 +20,7 @@ describe('The use operators.', () => {
       const value2: string = 'value2';
       const operation: DynOperation<unknown, unknown, string> = use(value1, value2);
       let index: number = 0;
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         switch(index++) {
           case 0:
             expect(result).toBe(value1);
@@ -38,7 +38,7 @@ describe('The use operators.', () => {
     it('should return a new DynOperation with the async given value', (done) => {
       const value: string = 'value';
       const operation: DynOperation<unknown, unknown, string> = useFrom(Promise.resolve(value));
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -49,7 +49,7 @@ describe('The use operators.', () => {
       const value2: string = 'value2';
       const operation: DynOperation<unknown, unknown, string> = useFrom(Promise.resolve(value1), Promise.resolve(value2));
       let index: number = 0;
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         switch(index++) {
           case 0:
             expect(result).toBe(value1);
@@ -66,7 +66,7 @@ describe('The use operators.', () => {
   describe('useUndefined', () => {
     it('should return a new DynOperation that return an undefined value', (done) => {
       const operation: DynOperation<unknown, unknown, undefined> = useUndefined();
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: undefined) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: undefined) => {
         expect(result).toBeUndefined();
         done();
       });
@@ -77,7 +77,7 @@ describe('The use operators.', () => {
     it('should return a new DynOperation that return an empty observable', () => {
       const operation: DynOperation<unknown, unknown, unknown> = useEmpty();
       const observer: Observer<unknown> = jasmine.createSpyObj('Observer', ['next', 'error', 'complete']);
-      operation({} as DynFormContext<unknown, unknown>).subscribe(observer);
+      operation({} as DynContext<unknown, unknown>).subscribe(observer);
       expect(observer.complete).toHaveBeenCalled();
       expect(observer.next).not.toHaveBeenCalled();
       expect(observer.error).not.toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe('The use operators.', () => {
         if: () => of(true),
         then: () => of(value),
       });
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -104,7 +104,7 @@ describe('The use operators.', () => {
         then: () => of('other'),
         else: () => of(value),
       });
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -116,7 +116,7 @@ describe('The use operators.', () => {
         then: () => of('other'),
       });
       const observer: Observer<unknown> = jasmine.createSpyObj('Observer', ['next', 'error', 'complete']);
-      operation({} as DynFormContext<unknown, unknown>).subscribe(observer);
+      operation({} as DynContext<unknown, unknown>).subscribe(observer);
       expect(observer.complete).toHaveBeenCalled();
       expect(observer.next).not.toHaveBeenCalled();
       expect(observer.error).not.toHaveBeenCalled();
@@ -133,7 +133,7 @@ describe('The use operators.', () => {
           b: () => of('other'),
         },
       });
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -148,7 +148,7 @@ describe('The use operators.', () => {
           2: () => of('other'),
         },
       });
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -164,7 +164,7 @@ describe('The use operators.', () => {
         },
         defaults: () => of(value),
       });
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: string) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: string) => {
         expect(result).toBe(value);
         done();
       });
@@ -179,7 +179,7 @@ describe('The use operators.', () => {
         },
       });
       const observer: Observer<unknown> = jasmine.createSpyObj('Observer', ['next', 'error', 'complete']);
-      operation({} as DynFormContext<unknown, unknown>).subscribe(observer);
+      operation({} as DynContext<unknown, unknown>).subscribe(observer);
       expect(observer.complete).toHaveBeenCalled();
       expect(observer.next).not.toHaveBeenCalled();
       expect(observer.error).not.toHaveBeenCalled();

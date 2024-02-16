@@ -1,9 +1,9 @@
 import { of } from 'rxjs';
+import { DynForm } from '../../models/dyn-form/dynform.model';
 import { DynOperable, DynOperation } from '../../models/dyn-operation.model';
 import { DynValidator } from '../../models/dyn-validator.model';
 import { DynFormValue } from '../../models/value.model';
-import { DynForm } from '../dynform.model';
-import { FieldDynForm } from '../field.dynform';
+import { FieldDynForm } from '../dynforms/field.dynform';
 
 /**
  * Options to create a new DynForm instance.

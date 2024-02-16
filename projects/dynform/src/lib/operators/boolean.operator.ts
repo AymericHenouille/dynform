@@ -1,6 +1,6 @@
 import { Observable, combineLatest, map } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 
 /**
  * The and operator take a list of boolean DynOperation and return a new DynOperation that return true if all the operations return true.
@@ -8,7 +8,7 @@ import { DynOperation } from '../models/dyn-operation.model';
  * @returns A new DynOperation that return true if all the operations return true.
  */
 export function and<TValue, TData>(...operations: DynOperation<TValue, TData, boolean>[]): DynOperation<TValue, TData, boolean> {
-  return (context: DynFormContext<TValue, TData>) => {
+  return (context: DynContext<TValue, TData>) => {
     const results: Observable<boolean>[] = operations.map((operation) => operation(context));
     return combineLatest(results).pipe(
       map((values: boolean[]) => values.every((value) => value)),
@@ -22,7 +22,7 @@ export function and<TValue, TData>(...operations: DynOperation<TValue, TData, bo
  * @returns A new DynOperation that return true if at least one of the operations return true.
  */
 export function or<TValue, TData>(...operations: DynOperation<TValue, TData, boolean>[]): DynOperation<TValue, TData, boolean> {
-  return (context: DynFormContext<TValue, TData>) => {
+  return (context: DynContext<TValue, TData>) => {
     const results: Observable<boolean>[] = operations.map((operation) => operation(context));
     return combineLatest(results).pipe(
       map((values: boolean[]) => values.some((value) => value)),
@@ -36,7 +36,7 @@ export function or<TValue, TData>(...operations: DynOperation<TValue, TData, boo
  * @returns A new DynOperation that return the opposite value.
  */
 export function not<TValue, TData>(operation: DynOperation<TValue, TData, boolean>): DynOperation<TValue, TData, boolean> {
-  return (context: DynFormContext<TValue, TData>) => operation(context).pipe(
+  return (context: DynContext<TValue, TData>) => operation(context).pipe(
     map((value: boolean) => !value),
   );
 }

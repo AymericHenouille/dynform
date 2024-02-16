@@ -1,6 +1,6 @@
 import { EMPTY, Observable, concat, map, of, switchMap } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 
 /**
  * Create a new DynOperation with the given value.
@@ -61,7 +61,7 @@ export type UseIfOptions<TValue, TData, TUse> = {
  * @returns A new DynOperation.
  */
 export function useIf<TValue, TData, TUse>(options: UseIfOptions<TValue, TData, TUse>): DynOperation<TValue, TData, TUse> {
-  return (context: DynFormContext<TValue, TData>) => options.if(context).pipe(
+  return (context: DynContext<TValue, TData>) => options.if(context).pipe(
     map((condition) => {
       if (condition) return options.then;
       return options.else ?? useEmpty<TValue, TData, TUse>();
@@ -96,7 +96,7 @@ export type UseWhenOptions<TValue, TData, TWhen extends number | string | symbol
  * @returns A new DynOperation.
  */
 export function useWhen<TValue, TData, TWhen extends number | string, TReturn>(options: UseWhenOptions<TValue, TData, TWhen, TReturn>): DynOperation<TValue, TData, TReturn> {
-  return (context: DynFormContext<TValue, TData>) => options.when(context).pipe(
+  return (context: DynContext<TValue, TData>) => options.when(context).pipe(
     map((value) => options.cases[value] ?? options.defaults ?? useEmpty<TValue, TData, TReturn>()),
     switchMap((operation) => operation(context)),
   );

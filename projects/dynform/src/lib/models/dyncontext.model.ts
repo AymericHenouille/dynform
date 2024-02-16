@@ -1,9 +1,8 @@
-import { DynForm } from './dynform.model';
 
 /**
  * The DynFormContext interface represents the context of a form controller.
  */
-export interface DynFormContext<TContextValue, TContextData> {
+export interface DynContext<TValue, TData> {
   /**
    * The name of the controller.
    * It is used to reference the controller.
@@ -12,10 +11,10 @@ export interface DynFormContext<TContextValue, TContextData> {
   /**
    * The current value of the controller.
    */
-  dynForm: DynForm<TContextValue, TContextData>;
+  dynForm: any;
   /**
    * The parent context of the controller.
    * It is used to reference the parent controller.
    */
-  parent?: DynFormContext<any, any>;
+  parent?: DynContext<any, any>;
 }

@@ -1,6 +1,6 @@
 import { of } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 import { compare } from './compare.operator';
 
 describe('The compare operator', () => {
@@ -10,7 +10,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, unknown> = () => of(1);
       const arg2: DynOperation<unknown, unknown, unknown> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'unknown' as any, arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe({
+      operation({} as DynContext<unknown, unknown>).subscribe({
         error: (error) => {
           expect(error).toBeInstanceOf(Error);
           expect(error.message).toBe('Unknown operator: unknown');
@@ -25,7 +25,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -35,7 +35,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -45,7 +45,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -55,7 +55,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -67,7 +67,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -77,7 +77,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -87,7 +87,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -97,7 +97,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -109,7 +109,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '===', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -119,7 +119,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '===', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -129,7 +129,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '===', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -141,7 +141,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -151,7 +151,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('value2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -161,7 +161,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('1');
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '!==', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -173,7 +173,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -183,7 +183,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(2);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -193,7 +193,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -205,7 +205,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -215,7 +215,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -225,7 +225,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(2);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '<=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -237,7 +237,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(2);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -247,7 +247,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -257,7 +257,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -269,7 +269,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(2);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -279,7 +279,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(1);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -289,7 +289,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, number> = () => of(1);
       const arg2: DynOperation<unknown, unknown, number> = () => of(2);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, '>=', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -301,7 +301,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string[]> = () => of(['value', 'value2']);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'in', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -311,7 +311,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string[]> = () => of(['value2', 'value3']);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'in', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -323,7 +323,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string[]> = () => of(['value', 'value2']);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not in', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -333,7 +333,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string[]> = () => of(['value2', 'value3']);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not in', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -345,7 +345,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'startsWith', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -355,7 +355,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'startsWith', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -367,7 +367,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('ue');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'endsWith', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -377,7 +377,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('ue2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'endsWith', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -389,7 +389,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('alu');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'includes', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -399,7 +399,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('alu2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'includes', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -411,7 +411,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -421,7 +421,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -431,7 +431,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, RegExp> = () => of(/val/);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -441,7 +441,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, RegExp> = () => of(/val2/);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -453,7 +453,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -463,7 +463,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, string> = () => of('val2');
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });
@@ -473,7 +473,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, RegExp> = () => of(/val/);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeFalse();
         done();
       });
@@ -483,7 +483,7 @@ describe('The compare operator', () => {
       const arg1: DynOperation<unknown, unknown, string> = () => of('value');
       const arg2: DynOperation<unknown, unknown, RegExp> = () => of(/val2/);
       const operation: DynOperation<unknown, unknown, boolean> = compare(arg1, 'not match', arg2);
-      operation({} as DynFormContext<unknown, unknown>).subscribe((value) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((value) => {
         expect(value).toBeTrue();
         done();
       });

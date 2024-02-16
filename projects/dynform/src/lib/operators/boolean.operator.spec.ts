@@ -1,13 +1,13 @@
 import { of } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 import { and, not, or } from './boolean.operator';
 
 describe('The boolean operators', () => {
   describe('not', () => {
     it('should return a new DynOperation that return the opposite value', (done) => {
       const operation: DynOperation<unknown, unknown, boolean> = not(() => of(true));
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(false);
         done();
       });
@@ -15,7 +15,7 @@ describe('The boolean operators', () => {
 
     it('should return a new DynOperation that return the opposite value', (done) => {
       const operation: DynOperation<unknown, unknown, boolean> = not(() => of(false));
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(true);
         done();
       });
@@ -29,7 +29,7 @@ describe('The boolean operators', () => {
         () => of(true),
         () => of(true),
       );
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(true);
         done();
       });
@@ -41,7 +41,7 @@ describe('The boolean operators', () => {
         () => of(false),
         () => of(true),
       );
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(false);
         done();
       });
@@ -55,7 +55,7 @@ describe('The boolean operators', () => {
         () => of(false),
         () => of(true),
       );
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(true);
         done();
       });
@@ -67,7 +67,7 @@ describe('The boolean operators', () => {
         () => of(false),
         () => of(false),
       );
-      operation({} as DynFormContext<unknown, unknown>).subscribe((result: boolean) => {
+      operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(false);
         done();
       });

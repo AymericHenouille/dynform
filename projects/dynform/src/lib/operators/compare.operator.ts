@@ -1,6 +1,6 @@
 import { combineLatest, map } from 'rxjs';
-import { DynFormContext } from '../forms/dynform-context.model';
-import { DynOperation } from '../models/dyn-operation.model';
+import { DynContext } from '../models/dyncontext.model';
+import { DynOperation } from '../models/dynoperation.model';
 
 type LogicalOperator = '==' | '===' | '!=' | '!==' | '<' | '<=' | '>' | '>=';
 type ArrayOperator = 'in' | 'not in';
@@ -59,7 +59,7 @@ export function compare<
   operate: TOperation,
   arg2: DynOperation<TValue, TData, TArg2>
 ): DynOperation<TValue, TData, boolean> {
-  return (context: DynFormContext<TValue, TData>) => combineLatest([arg1(context), arg2(context)]).pipe(
+  return (context: DynContext<TValue, TData>) => combineLatest([arg1(context), arg2(context)]).pipe(
     map(([value1, value2]) => {
       switch (operate) {
         case '==': return (value1 as any) == value2;

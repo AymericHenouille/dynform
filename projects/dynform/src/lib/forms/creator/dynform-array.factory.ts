@@ -1,4 +1,4 @@
-import { DynformArray } from '../dynform.model';
+import { DynformArray } from '../../models/dyn-form/dynform.model';
 
 export interface DynFormArrayOptions {
 
