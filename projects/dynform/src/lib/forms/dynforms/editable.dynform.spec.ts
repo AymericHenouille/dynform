@@ -396,6 +396,31 @@ describe('The EditableDynForm', () => {
       const disable2: boolean = await firstValueFrom(form.disable$);
       expect(disable2).toBeTrue();
     });
+
+    it('should be disabled when the parent form is invalid', async () => {
+      const parent: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => of(true),
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => of(false),
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      const parentContext: DynContext<string, {}> = { dynForm: parent, name: 'root' };
+      parent.setContext(parentContext);
+
+      const formContext: DynContext<string, {}> = { dynForm: form, name: 'child', parent: parentContext };
+      form.setContext(formContext);
+
+      const disable: boolean = await firstValueFrom(form.disable$);
+      expect(disable).toBeTrue();
+    });
   });
 
   describe('enable attribute', () => {

@@ -1,4 +1,5 @@
-import { BehaviorSubject, Observable, combineLatest, filter, firstValueFrom, map, merge, of, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, filter, firstValueFrom, map, merge, mergeMap, of, shareReplay, switchMap } from 'rxjs';
+import { DynContext } from '../../models/dyncontext.model';
 import { DynOperation } from '../../models/dynoperation.model';
 import { DynValidator, DynValidatorError } from '../../models/dynvalidator.model';
 import { UpdateValueFn, syncronizeValue } from '../../models/update-value.model';
@@ -119,10 +120,16 @@ export class EditableDynForm<TValue, TData> extends DataDynform<TValue, TData> {
    * @type {Observable<boolean>}
    * @memberof EditableDynForm
    */
-  public readonly disable$: Observable<boolean> = merge(
-    this._disable$$.pipe(filter((disable: boolean | undefined): disable is boolean => disable !== undefined)),
-    super.operate<boolean>(this.editableOptions.disable)
-  ).pipe(shareReplay(1));
+  public readonly disable$: Observable<boolean> = this.context$.pipe(
+    filter((context): context is DynContext<TValue, TData> => context !== undefined),
+    map(({parent}) => parent?.dynForm.disable$ ?? of(false)),
+    mergeMap((parentDisable$: Observable<boolean>) => parentDisable$),
+    mergeMap((parentDisable: boolean) => merge(
+      this._disable$$.pipe(filter((disable: boolean | undefined): disable is boolean => disable !== undefined)),
+      super.operate<boolean>(this.editableOptions.disable)
+    ).pipe(map((disable) => parentDisable || disable))),
+    shareReplay(1)
+  );
 
   /**
    * The enable state of the form.
