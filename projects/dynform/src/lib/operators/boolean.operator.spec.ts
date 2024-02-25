@@ -26,8 +26,10 @@ describe('The boolean operators', () => {
     it('should return a new DynOperation that return true if all the operations return true', (done) => {
       const operation: DynOperation<unknown, unknown, boolean> = and(
         () => of(true),
-        () => of(true),
-        () => of(true),
+        [
+          () => of(true),
+          () => of(true)
+        ],
       );
       operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(true);
@@ -36,11 +38,11 @@ describe('The boolean operators', () => {
     });
 
     it('should return a new DynOperation that return false if at least one of the operations return false', (done) => {
-      const operation: DynOperation<unknown, unknown, boolean> = and(
+      const operation: DynOperation<unknown, unknown, boolean> = and([
         () => of(true),
         () => of(false),
         () => of(true),
-      );
+      ]);
       operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(false);
         done();
@@ -53,7 +55,7 @@ describe('The boolean operators', () => {
       const operation: DynOperation<unknown, unknown, boolean> = or(
         () => of(false),
         () => of(false),
-        () => of(true),
+        [() => of(true)],
       );
       operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(true);
@@ -62,11 +64,11 @@ describe('The boolean operators', () => {
     });
 
     it('should return a new DynOperation that return false if all the operations return false', (done) => {
-      const operation: DynOperation<unknown, unknown, boolean> = or(
+      const operation: DynOperation<unknown, unknown, boolean> = or([
         () => of(false),
         () => of(false),
         () => of(false),
-      );
+      ]);
       operation({} as DynContext<unknown, unknown>).subscribe((result: boolean) => {
         expect(result).toBe(false);
         done();

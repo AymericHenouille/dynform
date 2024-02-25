@@ -1,6 +1,7 @@
-import { BehaviorSubject, Observable, concatMap, filter } from 'rxjs';
+import { BehaviorSubject, Observable, concatMap, filter, firstValueFrom } from 'rxjs';
 import { DynContext } from '../../models/dyncontext.model';
 import { DynOperation } from '../../models/dynoperation.model';
+import { UpdateValueFn, syncronizeValue } from '../../models/update-value.model';
 
 /**
  * Represents a DynForm with a context.
@@ -35,7 +36,7 @@ export class ContextDynForm<TValue, TData> {
    */
   protected operate<TOperation>(operation: DynOperation<TValue, TData, TOperation>): Observable<TOperation> {
     return this.context$.pipe(
-      concatMap((context) => operation(context)),
+      concatMap((context: DynContext<TValue, TData>) => operation(context)),
     );
   }
 
@@ -45,5 +46,25 @@ export class ContextDynForm<TValue, TData> {
    */
   public setContext(context: DynContext<TValue, TData>): void {
     this._context$$.next(context);
+  }
+
+  /**
+   * Updates the context of the form.
+   * @param updateFn The function to update the context.
+   * @returns A promise that resolves when the context has been updated.
+   */
+  public async updateContext(updateFn: UpdateValueFn<DynContext<TValue, TData>>): Promise<void> {
+    const currentValue: DynContext<TValue, TData> | undefined = await firstValueFrom(this.context$);
+    const newValue: DynContext<TValue, TData> | undefined = await syncronizeValue(updateFn, currentValue);
+    this.setContext(newValue);
+  }
+
+  /**
+   * Patches the context of the form.
+   * @param patch The patch to apply to the context.
+   * @returns A promise that resolves when the context has been patched.
+   */
+  public patchContext(patch: Partial<DynContext<TValue, TData>>): Promise<void> {
+    return this.updateContext((currentValue) => Object.assign({}, currentValue, patch));
   }
 }

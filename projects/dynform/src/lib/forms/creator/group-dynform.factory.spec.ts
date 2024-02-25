@@ -1,46 +1,79 @@
+import { EMPTY, firstValueFrom, of } from 'rxjs';
+import { DynContext } from '../../models/dyncontext.model';
+import { DynValidatorError } from '../../models/dynvalidator.model';
+import { FieldDynForm, FieldDynFormOptions } from '../dynforms/field.dynform';
+import { GroupDynForm } from '../dynforms/group.dynform';
+import { createGroupDynform } from './group-dynform.factory';
+
+function createFieldDynform<TValue, TData>(ctxName: string, options: Partial<FieldDynFormOptions<TValue, TData>>): FieldDynForm<TValue, TData> {
+  const fullOptions: FieldDynFormOptions<TValue, TData> = Object.assign({
+    value: () => EMPTY,
+    placeholder: () => of(''),
+    hide: () => of(false),
+    disable: () => of(false),
+    validators: () => of([]),
+    data: () => EMPTY,
+  }, options);
+  const form: FieldDynForm<TValue, TData> = new FieldDynForm<TValue, TData>(fullOptions);
+  form.setContext({ name: ctxName, dynForm: form });
+  return form;
+}
+
+async function applyContext<TValue, TData>(dynForm: GroupDynForm<TValue, TData>, context: DynContext<TValue, TData>): Promise<void> {
+  dynForm.setContext(context);
+  for (const key of dynForm.keys()) {
+    const childForm = dynForm.get(key as keyof TValue);
+    await childForm.patchContext({ parent: context });
+  }
+}
+
 describe('The createGroupDynForm function', () => {
   it('should create a new GroupDynForm instance with default options', async () => {
-    const form: FieldDynForm<string, {}> = createFieldDynform();
-    form.setContext({} as any);
-    expect(form).toBeInstanceOf(FieldDynForm);
-
-    const hide: boolean = await firstValueFrom(form.hide$);
-    const disabled: boolean = await firstValueFrom(form.disable$);
-    const placeholder: string = await firstValueFrom(form.placeholder$);
-    const validators: DynValidatorError[] = await firstValueFrom(form.validatorsErrors$);
+    type User = { name: string; age: number; };
+    const groupDynForm: GroupDynForm<User, {}> = createGroupDynform<User, {}>({
+      name: createFieldDynform('name', {}),
+      age: createFieldDynform('age', {}),
+    });
+    await applyContext(groupDynForm, {
+      name: 'root',
+      dynForm: groupDynForm,
+    });
+    const hide: boolean = await firstValueFrom(groupDynForm.hide$);
+    const disabled: boolean = await firstValueFrom(groupDynForm.disable$);
+    const validators: DynValidatorError[] = await firstValueFrom(groupDynForm.validatorsErrors$);
 
     expect(hide).toBeFalse();
     expect(disabled).toBeFalse();
-    expect(placeholder).toBe('');
     expect(validators).toEqual([]);
   });
 
   it('should create a new GroupDynForm instance and override the default options', async () => {
-    const form: FieldDynForm<string, { data: string }> = createFieldDynform({
-      hide: use(true),
-      disable: use(true),
-      placeholder: use('placeholder'),
-      validators: use([
-        use({ message: 'test' })
+    type User = { name: string; age: number; };
+    const groupDynForm: GroupDynForm<User, { data: string }> = createGroupDynform<User, { data: string }>({
+      name: createFieldDynform('name', {}),
+      age: createFieldDynform('age', {}),
+    },
+    {
+      hide: () => of(true),
+      disable: () => of(true),
+      validators: () => of([
+        () => of({ message: 'test' })
       ]),
-      data: use({ data: use('test') }),
-      value: use({ value: 'test' }),
+      data: () => of({ data: () => of('test') }),
     });
-    form.setContext({} as any);
-    expect(form).toBeInstanceOf(FieldDynForm);
+    await applyContext(groupDynForm, {
+      name: 'root',
+      dynForm: groupDynForm,
+    });
 
-    const hide: boolean = await firstValueFrom(form.hide$);
-    const disabled: boolean = await firstValueFrom(form.disable$);
-    const placeholder: string = await firstValueFrom(form.placeholder$);
-    const validators: DynValidatorError[] = await firstValueFrom(form.validatorsErrors$);
-    const value: DynFormValue<string> = await firstValueFrom(form.value$);
-    const data: { data: string } = await firstValueFrom(form.data$);
+    const hide: boolean = await firstValueFrom(groupDynForm.hide$);
+    const disabled: boolean = await firstValueFrom(groupDynForm.disable$);
+    const validators: DynValidatorError[] = await firstValueFrom(groupDynForm.validatorsErrors$);
+    const data: { data: string } = await firstValueFrom(groupDynForm.data$);
 
     expect(hide).toBeTrue();
     expect(disabled).toBeTrue();
-    expect(placeholder).toBe('placeholder');
     expect(validators).toEqual([{ message: 'test' }]);
-    expect(value).toEqual({ value: 'test' });
     expect(data).toEqual({ data: 'test' });
   });
 });

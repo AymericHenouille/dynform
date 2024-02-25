@@ -7,9 +7,10 @@ import { DynOperation } from '../models/dynoperation.model';
  * @param operations The list of operations.
  * @returns A new DynOperation that return true if all the operations return true.
  */
-export function and<TValue, TData>(...operations: DynOperation<TValue, TData, boolean>[]): DynOperation<TValue, TData, boolean> {
+export function and<TValue, TData>(...operations: (DynOperation<TValue, TData, boolean> | DynOperation<TValue, TData, boolean>[])[]): DynOperation<TValue, TData, boolean> {
+  const flatOptions: DynOperation<TValue, TData, boolean>[] = operations.flat();
   return (context: DynContext<TValue, TData>) => {
-    const results: Observable<boolean>[] = operations.map((operation) => operation(context));
+    const results: Observable<boolean>[] = flatOptions.map((operation) => operation(context));
     return combineLatest(results).pipe(
       map((values: boolean[]) => values.every((value) => value)),
     );
@@ -21,9 +22,10 @@ export function and<TValue, TData>(...operations: DynOperation<TValue, TData, bo
  * @param operations The list of operations.
  * @returns A new DynOperation that return true if at least one of the operations return true.
  */
-export function or<TValue, TData>(...operations: DynOperation<TValue, TData, boolean>[]): DynOperation<TValue, TData, boolean> {
+export function or<TValue, TData>(...operations: (DynOperation<TValue, TData, boolean> | DynOperation<TValue, TData, boolean>[])[]): DynOperation<TValue, TData, boolean> {
+  const flatOptions: DynOperation<TValue, TData, boolean>[] = operations.flat();
   return (context: DynContext<TValue, TData>) => {
-    const results: Observable<boolean>[] = operations.map((operation) => operation(context));
+    const results: Observable<boolean>[] = flatOptions.map((operation) => operation(context));
     return combineLatest(results).pipe(
       map((values: boolean[]) => values.some((value) => value)),
     );

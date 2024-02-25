@@ -1,8 +1,6 @@
 import { BehaviorSubject, EMPTY, Observable, combineLatest, firstValueFrom, map, mergeMap } from 'rxjs';
 import { UpdateValueFn, syncronizeValue } from '../../models/update-value.model';
 import { DynFormValue } from '../../models/value.model';
-import { and, or } from '../../operators/boolean.operator';
-import { useFrom } from '../../operators/use.operator';
 import { EditableDynForm, EditableDynFormOption } from './editable.dynform';
 
 /**
@@ -24,7 +22,7 @@ export interface GroupDynFormOption<TValue, TData> {
 /**
  * Represents a group DynForm.
  */
-export class GroupDynForm<TValue, TData> extends EditableDynForm<TValue, TData>{
+export class GroupDynForm<TValue, TData> extends EditableDynForm<TValue, TData> {
   /**
    * Buffer for the label of the form.
    *
@@ -44,14 +42,33 @@ export class GroupDynForm<TValue, TData> extends EditableDynForm<TValue, TData>{
     super({
       ...options.options,
       value: () => EMPTY,
-      disable: or(
-        options.options.disable,
-        and(...Object.values<EditableDynForm<TValue[keyof TValue], any>>(options.fields as any)
-          .map((field) => field.disable$)
-          .map((disable$) => useFrom(disable$))
-        )
-      )
+      // disable: or(
+      //   options.options.disable,
+      //   and(
+      //     chain(
+      //       use(Object.values<EditableDynForm<TValue[keyof TValue], any>>(options.fields as any)),
+      //       (fields) => and(fields.map((field) => useFrom(field.disable$))),
+      //     ),
+      //   ),
+      // ),
     });
+  }
+
+  /**
+   * Get the child field of the form.
+   * @param name The name of the field.
+   * @returns The field of the form.
+   */
+  public get<Key extends keyof TValue>(name: Key): { [key in keyof TValue]: EditableDynForm<TValue[key], any>; }[Key] {
+    return this.options.fields[name];
+  }
+
+  /**
+   * Get the keys of the form.
+   * @returns The keys of the form.
+   */
+  public keys(): (keyof TValue)[] {
+    return Object.keys(this.options.fields) as (keyof TValue)[];
   }
 
   /**

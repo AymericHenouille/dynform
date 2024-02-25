@@ -24,7 +24,7 @@ export function useFrom<TValue, TData, TUse>(...values: (Observable<TUse> | Prom
  * Create a new DynOperation that return an undefined value.
  * @returns A new DynOperation.
  */
-export function useUndefined<TValue, TData, undefined>(): DynOperation<TValue, TData, undefined> {
+export function useUndefined<TValue, TData>(): DynOperation<TValue, TData, undefined> {
   return () => of(undefined);
 }
 
