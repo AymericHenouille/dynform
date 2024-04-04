@@ -671,4 +671,339 @@ describe('The EditableDynForm', () => {
       expect(validatorsErrors).toEqual([]);
     });
   });
+
+  describe('touch attribute', () => {
+    it('should be updated with the setTouchState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.touched$);
+      expect(touch1).toBeFalse();
+      form.setTouchState(true);
+      const touch2: boolean = await firstValueFrom(form.touched$);
+      expect(touch2).toBeTrue();
+    });
+
+    it('should be updated with the updateTouchState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.touched$);
+      expect(touch1).toBeFalse();
+      await form.updateTouchState((touch) => !touch);
+      const touch2: boolean = await firstValueFrom(form.touched$);
+      expect(touch2).toBeTrue();
+    });
+
+    it('should be updated with the updateTouchState method returning a promise', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.touched$);
+      expect(touch1).toBeFalse();
+      await form.updateTouchState((touch) => Promise.resolve(!touch));
+      const touch2: boolean = await firstValueFrom(form.touched$);
+      expect(touch2).toBeTrue();
+    });
+
+    it('should be updated with the updateTouchState method returning an observable', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.touched$);
+      expect(touch1).toBeFalse();
+      await form.updateTouchState((touch) => of(!touch));
+      const touch2: boolean = await firstValueFrom(form.touched$);
+      expect(touch2).toBeTrue();
+    });
+
+    it('should be updated with the touch method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.touched$);
+      expect(touch1).toBeFalse();
+      form.markAsTouched();
+      const touch2: boolean = await firstValueFrom(form.touched$);
+      expect(touch2).toBeTrue();
+    });
+  });
+
+  describe('untouch attribute', () => {
+    it('should be updated with the setUntouchState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.untouched$);
+      expect(touch1).toBeTrue();
+      form.setUntouchState(false);
+      const touch2: boolean = await firstValueFrom(form.untouched$);
+      expect(touch2).toBeFalse();
+    });
+
+    it('should be updated with the updateUntouchState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.untouched$);
+      expect(touch1).toBeTrue();
+      await form.updateUntouchState((touch) => !touch);
+      const touch2: boolean = await firstValueFrom(form.untouched$);
+      expect(touch2).toBeFalse();
+    });
+
+    it('should be updated with the updateUntouchState method returning a promise', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.untouched$);
+      expect(touch1).toBeTrue();
+      await form.updateUntouchState((touch) => Promise.resolve(!touch));
+      const touch2: boolean = await firstValueFrom(form.untouched$);
+      expect(touch2).toBeFalse();
+    });
+
+    it('should be updated with the updateUntouchState method returning an observable', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.untouched$);
+      expect(touch1).toBeTrue();
+      await form.updateUntouchState((touch) => of(!touch));
+      const touch2: boolean = await firstValueFrom(form.untouched$);
+      expect(touch2).toBeFalse();
+    });
+
+    it('should be updated with the untouch method', async () => {
+      const touch$$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => touch$$.asObservable(),
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const touch1: boolean = await firstValueFrom(form.untouched$);
+      expect(touch1).toBeTrue();
+      form.setUntouchState(false);
+      const touch2: boolean = await firstValueFrom(form.untouched$);
+      expect(touch2).toBeFalse();
+      form.markAsUntouched();
+      const touch3: boolean = await firstValueFrom(form.untouched$);
+      expect(touch3).toBeTrue();
+    });
+  });
+
+  describe('dirty attribute', () => {
+    it('should be updated with the setDirtyState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const dirty1: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty1).toBeFalse();
+      form.setDirtyState(true);
+      const dirty2: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty2).toBeTrue();
+    });
+
+    it('should be updated with the updateDirtyState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const dirty1: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty1).toBeFalse();
+      await form.updateDirtyState((dirty) => !dirty);
+      const dirty2: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty2).toBeTrue();
+    });
+
+    it('should be updated with the updateDirtyState method returning a promise', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const dirty1: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty1).toBeFalse();
+      await form.updateDirtyState((dirty) => Promise.resolve(!dirty));
+      const dirty2: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty2).toBeTrue();
+    });
+
+    it('should be updated with the updateDirtyState method returning an observable', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const dirty1: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty1).toBeFalse();
+      await form.updateDirtyState((dirty) => of(!dirty));
+      const dirty2: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty2).toBeTrue();
+    });
+
+    it('should be updated with the markAsDirty method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const dirty1: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty1).toBeFalse();
+      form.markAsDirty();
+      const dirty2: boolean = await firstValueFrom(form.dirty$);
+      expect(dirty2).toBeTrue();
+    });
+  });
+
+  describe('pristine attribute', () => {
+    it('should be updated with the setPristineState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const pristine1: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine1).toBeTrue();
+      form.setPristineState(false);
+      const pristine2: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine2).toBeFalse();
+    });
+
+    it('should be updated with the updatePristineState method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const pristine1: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine1).toBeTrue();
+      await form.updatePristineState((pristine) => !pristine);
+      const pristine2: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine2).toBeFalse();
+    });
+
+    it('should be updated with the updatePristineState method returning a promise', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const pristine1: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine1).toBeTrue();
+      await form.updatePristineState((pristine) => Promise.resolve(!pristine));
+      const pristine2: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine2).toBeFalse();
+    });
+
+    it('should be updated with the updatePristineState method returning an observable', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const pristine1: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine1).toBeTrue();
+      await form.updatePristineState((pristine) => of(!pristine));
+      const pristine2: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine2).toBeFalse();
+    });
+
+    it('should be updated with the markAsPristine method', async () => {
+      const form: EditableDynForm<string, {}> = new EditableDynForm<string, {}>({
+        value: () => EMPTY,
+        data: () => EMPTY,
+        disable: () => EMPTY,
+        hide: () => EMPTY,
+        validators: () => EMPTY
+      });
+      form.setContext({} as DynContext<string, {}>);
+      const pristine1: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine1).toBeTrue();
+      form.setPristineState(false);
+      const pristine2: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine2).toBeFalse();
+      form.markAsPristine();
+      const pristine3: boolean = await firstValueFrom(form.pristine$);
+      expect(pristine3).toBeTrue();
+    });
+  });
 });

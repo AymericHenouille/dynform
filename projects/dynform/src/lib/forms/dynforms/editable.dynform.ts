@@ -74,6 +74,22 @@ export class EditableDynForm<TValue, TData> extends DataDynform<TValue, TData> {
    * @memberof EditableDynForm
    */
   private readonly _disable$$: BehaviorSubject<boolean | undefined> = new BehaviorSubject<boolean | undefined>(undefined);
+  /**
+   * Buffer for the touch state.
+   *
+   * @private
+   * @type {(BehaviorSubject<boolean | undefined>)}
+   * @memberof EditableDynForm
+   */
+  private readonly _touched$$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  /**
+   * Buffer for the dirty state.
+   *
+   * @private
+   * @type {BehaviorSubject<boolean>}
+   * @memberof EditableDynForm
+   */
+  private readonly _dirty$$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   /**
    * The value of the form.
@@ -165,6 +181,35 @@ export class EditableDynForm<TValue, TData> extends DataDynform<TValue, TData> {
    */
   public readonly invalid$: Observable<boolean> = this.valid$.pipe(map((valid) => !valid));
 
+  /**
+   * The touch state of the form.
+   *
+   * @type {Observable<boolean>}
+   * @memberof EditableDynForm
+   */
+  public readonly touched$: Observable<boolean> = this._touched$$.asObservable();
+  /**
+   * The untouched state of the form.
+   *
+   * @type {Observable<boolean>}
+   * @memberof EditableDynForm
+   */
+  public readonly untouched$: Observable<boolean> = this.touched$.pipe(map((touched) => !touched));
+
+  /**
+   * The dirty state of the form.
+   *
+   * @type {Observable<boolean>}
+   * @memberof EditableDynForm
+   */
+  public readonly dirty$: Observable<boolean> = this._dirty$$.asObservable();
+  /**
+   * The pristine state of the form.
+   *
+   * @type {Observable<boolean>}
+   * @memberof EditableDynForm
+   */
+  public readonly pristine$: Observable<boolean> = this.dirty$.pipe(map((dirty) => !dirty));
   /**
    * Change the value of the form.
    * @param value The new value of the form.
@@ -294,5 +339,105 @@ export class EditableDynForm<TValue, TData> extends DataDynform<TValue, TData> {
    */
   public disable(): void {
     this.setDisabledState(true);
+  }
+
+  /**
+   * Set the touch state of the form.
+   * @param isTouched The touch state of the form.
+   */
+  public setTouchState(isTouched: boolean): void {
+    this._touched$$.next(isTouched);
+  }
+
+  /**
+   * Update the touch state of the form.
+   * @param updateValueFn The function to update the touch state of the form.
+   */
+  public async updateTouchState(updateValueFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentTouchState: boolean = await firstValueFrom(this.touched$);
+    const newTouchState: boolean = await syncronizeValue(updateValueFn, currentTouchState);
+    this.setTouchState(newTouchState);
+  }
+
+  /**
+   * Set the untouched state of the form.
+   * @param isUntouched The untouched state of the form.
+   */
+  public setUntouchState(isUntouched: boolean): void {
+    this.setTouchState(!isUntouched);
+  }
+
+  /**
+   * Update the untouched state of the form.
+   * @param updateValueFn The function to update the untouched state of the form.
+   */
+  public async updateUntouchState(updateValueFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentUntouchState: boolean = await firstValueFrom(this.untouched$);
+    const newUntouchState: boolean = await syncronizeValue(updateValueFn, currentUntouchState);
+    this.setUntouchState(newUntouchState);
+  }
+
+  /**
+   * Set the dirty state of the form.
+   * @param isDirty The dirty state of the form.
+   */
+  public setDirtyState(isDirty: boolean): void {
+    this._dirty$$.next(isDirty);
+  }
+
+  /**
+   * Update the dirty state of the form.
+   * @param updateValueFn The function to update the dirty state of the form.
+   */
+  public async updateDirtyState(updateValueFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentDirtyState: boolean = await firstValueFrom(this.dirty$);
+    const newDirtyState: boolean = await syncronizeValue(updateValueFn, currentDirtyState);
+    this.setDirtyState(newDirtyState);
+  }
+
+  /**
+   * Set the pristine state of the form.
+   * @param isPristine The pristine state of the form.
+   */
+  public setPristineState(isPristine: boolean): void {
+    this.setDirtyState(!isPristine);
+  }
+
+  /**
+   * Update the pristine state of the form.
+   * @param updateValueFn The function to update the pristine state of the form.
+   */
+  public async updatePristineState(updateValueFn: UpdateValueFn<boolean>): Promise<void> {
+    const currentPristineState: boolean = await firstValueFrom(this.pristine$);
+    const newPristineState: boolean = await syncronizeValue(updateValueFn, currentPristineState);
+    this.setPristineState(newPristineState);
+  }
+
+  /**
+   * Touch the form.
+   */
+  public markAsTouched(): void {
+    this.setTouchState(true);
+  }
+
+  /**
+   * Untouch the form.
+   */
+  public markAsUntouched(): void {
+    this.setUntouchState(true);
+  }
+
+  /**
+   * Dirty the form.
+   */
+  public markAsDirty(): void {
+    this.setDirtyState(true);
+  }
+
+  /**
+   * Pristine the form.
+   */
+  public markAsPristine(): void {
+    this.setPristineState(true);
   }
 }

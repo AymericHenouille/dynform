@@ -42,15 +42,6 @@ export class GroupDynForm<TValue, TData> extends EditableDynForm<TValue, TData> 
     super({
       ...options.options,
       value: () => EMPTY,
-      // disable: or(
-      //   options.options.disable,
-      //   and(
-      //     chain(
-      //       use(Object.values<EditableDynForm<TValue[keyof TValue], any>>(options.fields as any)),
-      //       (fields) => and(fields.map((field) => useFrom(field.disable$))),
-      //     ),
-      //   ),
-      // ),
     });
   }
 
@@ -83,7 +74,7 @@ export class GroupDynForm<TValue, TData> extends EditableDynForm<TValue, TData> 
       return field.value$.pipe(map(({value}) => ({ key, value })));
     })).pipe(
       map((entries) => entries.reduce((acc, entry) => ({ ...acc, [entry.key]: entry.value }), {} as TValue)),
-      map((value) => ({ label, value }))
+      map((value) => ({ label, value })),
     )),
   );
 
