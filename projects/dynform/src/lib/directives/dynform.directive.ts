@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, ComponentRef, ContentChildren, Directive, Inject, Input, OnDestroy, OnInit, Optional, QueryList, SkipSelf, TemplateRef, ViewChild, ViewContainerRef, forwardRef } from '@angular/core';
+import { Directive, ElementRef, Inject, Input, OnDestroy, OnInit, Optional, Self, SkipSelf, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Behavior } from '../forms/behavior/behavior.model';
+import { InputBehavior } from '../forms/behavior/input.behavior';
 import { VisibleBehavior } from '../forms/behavior/visible.behavior';
 import { FieldDynForm } from '../forms/dynforms/field.dynform';
 import { DynContext } from '../models/dyncontext.model';
@@ -44,6 +45,11 @@ export class DynformDirective<TValue, TData> implements DynContext<TValue, TData
   @Input('dynFormName')
   public name!: string;
 
+  private readonly BEHAVIOR: Behavior<FieldDynForm<TValue, TData>>[] = [
+    new VisibleBehavior(this.elementRef),
+    new InputBehavior(this.elementRef, this.accessor),
+  ];
+
   /**
    * Create a new instance of DynformDirective.
    * @param parentContext The parent context of the dynform.
@@ -53,61 +59,23 @@ export class DynformDirective<TValue, TData> implements DynContext<TValue, TData
   public constructor(
     @Optional() @SkipSelf() @Inject(DYNFORM_PARENT_CONTEXT)
     public  readonly parent: DynContext<TValue, TData>,
-    private readonly templateRef: TemplateRef<TData>,
-    private readonly viewContainerRef: ViewContainerRef,
+    @Optional() @Self() @Inject(NG_VALUE_ACCESSOR)
+    private readonly accessor: ControlValueAccessor | ControlValueAccessor[],
+    private readonly elementRef: ElementRef<HTMLElement>,
   ) { }
 
   /**
    * Set the context of the dynform and bind all behavior.
    */
   public ngOnInit(): void {
-    const component: ComponentRef<DynFormContainerComponent<TValue, TData>> = this.viewContainerRef.createComponent<DynFormContainerComponent<TValue, TData>>(DynFormContainerComponent);
-    component.setInput('templateRef', this.templateRef);
-    component.setInput('dynForm', this.dynForm);
-    component.setInput('dynFormName', this.name ?? DynformDirective.DEFAULT_NAME);
+    this.BEHAVIOR.forEach((behavior) => behavior.bind(this.dynForm));
+    setTimeout(() => this.dynForm.setContext(this));
   }
 
   /**
    * Dispose the directive.
    */
   public ngOnDestroy(): void {
-    this.viewContainerRef.clear();
-  }
-}
-
-@Component({
-  selector: 'dyn-form-container',
-  template: '<ng-container #container></ng-container>',
-})
-export class DynFormContainerComponent<TValue, TData> implements AfterViewInit, OnDestroy {
-  @ViewChild('container', { read: ViewContainerRef })
-  public viewContainerRef!: ViewContainerRef;
-  @ContentChildren(NG_VALUE_ACCESSOR, { descendants: true, read: QueryList })
-  public set accessor(acc: QueryList<ControlValueAccessor>)
-  {
-    console.log('accessor', acc)
-    acc.changes.subscribe((value) => console.log(value))
-  }
-
-  @Input()
-  public templateRef!: TemplateRef<TData>;
-  @Input()
-  public dynForm!: FieldDynForm<TValue, TData>;
-  @Input()
-  public dynFormName!: string;
-
-  private behaviors!: Behavior<FieldDynForm<TValue, TData>>[];
-
-  public ngAfterViewInit(): void {
-    this.behaviors = [
-      new VisibleBehavior(this.templateRef, this.viewContainerRef),
-      // new InputBehavior(this.accessor),
-    ];
-
-    this.behaviors.forEach(behavior => behavior.bind(this.dynForm));
-  }
-
-  public ngOnDestroy(): void {
-    this.behaviors.forEach(behavior => behavior.dispose());
+    this.BEHAVIOR.forEach((behavior) => behavior.dispose());
   }
 }
