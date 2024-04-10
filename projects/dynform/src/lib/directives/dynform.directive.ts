@@ -5,7 +5,7 @@ import { InputBehavior } from '../forms/behavior/input.behavior';
 import { VisibleBehavior } from '../forms/behavior/visible.behavior';
 import { FieldDynForm } from '../forms/dynforms/field.dynform';
 import { DynContext } from '../models/dyncontext.model';
-import { DYNFORM_PARENT_CONTEXT } from './dynform-parent-context.token';
+import { DYNFORM_CONTEXT, readContextName } from './dynform-parent-context.token';
 
 /**
  * Directive to mark a form element as a dynform.
@@ -14,21 +14,12 @@ import { DYNFORM_PARENT_CONTEXT } from './dynform-parent-context.token';
   selector: '[dynForm]',
   providers: [
     {
-      provide: DYNFORM_PARENT_CONTEXT,
+      provide: DYNFORM_CONTEXT,
       useExisting: forwardRef(() => DynformDirective),
     },
   ],
 })
 export class DynformDirective<TValue, TData> implements DynContext<TValue, TData>, OnInit, OnDestroy {
-  /**
-   * The default name of the dynform.
-   *
-   * @private
-   * @static
-   * @type {string}
-   * @memberof DynformDirective
-   */
-  private static readonly DEFAULT_NAME: string = 'root';
   /**
    * The dynform.
    * @type {FieldDynForm<TValue, TData>}
@@ -43,8 +34,15 @@ export class DynformDirective<TValue, TData> implements DynContext<TValue, TData
    * @memberof DynformDirective
    */
   @Input('dynFormName')
-  public name!: string;
+  public name!: string | number | Symbol;
 
+  /**
+   * The parent context of the dynform.
+   *
+   * @private
+   * @type {Behavior<FieldDynForm<TValue, TData>>[]}
+   * @memberof DynformDirective
+   */
   private readonly BEHAVIOR: Behavior<FieldDynForm<TValue, TData>>[] = [
     new VisibleBehavior(this.elementRef),
     new InputBehavior(this.elementRef, this.accessor),
@@ -52,12 +50,12 @@ export class DynformDirective<TValue, TData> implements DynContext<TValue, TData
 
   /**
    * Create a new instance of DynformDirective.
-   * @param parentContext The parent context of the dynform.
-   * @param templateRef The template reference of the dynform.
-   * @param viewContainerRef The view container reference of the dynform.
+   * @param parent The parent context of the dynform.
+   * @param accessor The accessor reference of the dynform.
+   * @param elementRef The element reference of the dynform.
    */
   public constructor(
-    @Optional() @SkipSelf() @Inject(DYNFORM_PARENT_CONTEXT)
+    @Optional() @SkipSelf() @Inject(DYNFORM_CONTEXT)
     public  readonly parent: DynContext<TValue, TData>,
     @Optional() @Self() @Inject(NG_VALUE_ACCESSOR)
     private readonly accessor: ControlValueAccessor | ControlValueAccessor[],
@@ -68,6 +66,7 @@ export class DynformDirective<TValue, TData> implements DynContext<TValue, TData
    * Set the context of the dynform and bind all behavior.
    */
   public ngOnInit(): void {
+    this.name = readContextName(this);
     this.BEHAVIOR.forEach((behavior) => behavior.bind(this.dynForm));
     setTimeout(() => this.dynForm.setContext(this));
   }

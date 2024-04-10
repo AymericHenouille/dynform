@@ -35,7 +35,7 @@ export class InputAccessor implements ControlValueAccessor {
    * Register a change event.
    * @param fn The change event to register.
    */
-  public registerOnChange(fn: () => void): void {
+  public registerOnChange(fn: (value: any) => void): void {
     this.onChangeFn = fn;
   }
 
